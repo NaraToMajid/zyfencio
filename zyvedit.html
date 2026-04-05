@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zyvedit — Editor Kode</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!-- CodeMirror -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css">
+  <style>
+    :root { --editor-h: calc(100vh - 58px - 48px - 48px); }
+
+    .zyvedit-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      grid-template-rows: 48px 1fr;
+      height: calc(100vh - 58px);
+      padding-top: 58px;
+    }
+
+    /* TOOLBAR */
+    .editor-toolbar {
+      grid-column: 1 / -1;
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px; padding: 0 16px;
+      flex-shrink: 0; overflow-x: auto;
+    }
+    .editor-toolbar .toolbar-sep { width: 1px; height: 24px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
+    .toolbar-title {
+      font-weight: 800; font-size: 0.92rem; color: var(--accent);
+      font-family: var(--font-mono); margin-right: 8px; white-space: nowrap;
+    }
+
+    /* FILE TREE PANEL */
+    .editor-panel {
+      background: var(--bg2); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .panel-head {
+      padding: 10px 14px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .panel-head h3 { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text3); }
+    .panel-body { flex: 1; overflow-y: auto; padding: 8px; }
+
+    /* EDITOR AREA */
+    .editor-main {
+      display: flex; flex-direction: column; overflow: hidden;
+      background: var(--bg);
+    }
+
+    /* Tabs for open files */
+    .file-tabs {
+      display: flex; align-items: center; background: var(--bg2);
+      border-bottom: 1px solid var(--border); overflow-x: auto;
+      flex-shrink: 0; height: 36px;
+    }
+    .file-tab {
+      display: flex; align-items: center; gap: 8px;
+      padding: 0 14px; height: 36px; border-right: 1px solid var(--border);
+      cursor: pointer; font-size: 0.82rem; font-family: var(--font-mono);
+      color: var(--text3); white-space: nowrap; transition: background 0.1s;
+      flex-shrink: 0;
+    }
+    .file-tab:hover { background: var(--bg3); color: var(--text); }
+    .file-tab.active { background: var(--bg); color: var(--text); border-bottom: 2px solid var(--accent); }
+    .file-tab .close-tab { opacity: 0; font-size: 0.7rem; transition: opacity 0.1s; cursor: pointer; padding: 2px; }
+    .file-tab:hover .close-tab, .file-tab.active .close-tab { opacity: 1; }
+
+    /* CodeMirror Override */
+    .CodeMirror {
+      height: 100%; font-family: var(--font-mono); font-size: 0.88rem;
+      line-height: 1.7; background: transparent;
+    }
+    .cm-wrap { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+    .CodeMirror-scroll { flex: 1; }
+
+    /* STATUSBAR */
+    .status-bar {
+      background: var(--accent); color: #fff;
+      padding: 2px 14px; font-size: 0.72rem; font-family: var(--font-mono);
+      display: flex; gap: 20px; align-items: center; flex-shrink: 0;
+    }
+    .status-bar span { opacity: 0.85; }
+
+    /* WELCOME SCREEN */
+    .editor-welcome {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; color: var(--text3); text-align: center; padding: 40px;
+    }
+    .editor-welcome i { font-size: 3rem; margin-bottom: 20px; opacity: 0.2; }
+    .editor-welcome h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 8px; color: var(--text2); }
+    .editor-welcome p { font-size: 0.85rem; }
+
+    /* Project selector */
+    .project-selector {
+      padding: 10px 14px; border-bottom: 1px solid var(--border);
+    }
+    .project-selector select { width: 100%; }
+
+    .file-item-zyv {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; border-radius: 6px; cursor: pointer;
+      font-family: var(--font-mono); font-size: 0.8rem; color: var(--text2);
+      transition: all 0.15s; justify-content: space-between;
+    }
+    .file-item-zyv:hover { background: var(--bg3); color: var(--text); }
+    .file-item-zyv.active { background: rgba(108,99,255,0.15); color: var(--accent); }
+    .file-item-zyv .file-actions { display: none; gap: 4px; }
+    .file-item-zyv:hover .file-actions { display: flex; }
+
+    /* Lock badge */
+    .lock-badge { color: var(--warn); font-size: 0.7rem; }
+
+    /* New file/folder modal */
+    .new-file-row { display: flex; gap: 8px; margin-top: 8px; }
+
+    @media (max-width: 768px) {
+      .zyvedit-layout { grid-template-columns: 1fr; grid-template-rows: 48px 36px 1fr; }
+      .editor-panel { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <button class="hamburger"><i class="fa-solid fa-bars"></i></button>
+    <a href="dashboard.html" class="logo"><span>Zyv</span><span style="color:var(--text)">enqo</span></a>
+    <nav style="margin-left:auto; gap:6px;">
+      <span id="saveStatus" style="font-size:0.78rem;color:var(--text3);font-family:var(--font-mono);"></span>
+      <a href="dashboard.html" class="btn btn-secondary btn-sm"><i class="fa-solid fa-house"></i></a>
+    </nav>
+  </header>
+
+  <div class="zyvedit-layout">
+    <!-- TOOLBAR -->
+    <div class="editor-toolbar">
+      <span class="toolbar-title">Zyvedit</span>
+      <div class="toolbar-sep"></div>
+      <button class="btn btn-sm btn-primary" onclick="saveFile()" title="Simpan (Ctrl+S)"><i class="fa-solid fa-floppy-disk"></i> Simpan</button>
+      <button class="btn btn-sm btn-secondary" onclick="newFile()" title="File Baru"><i class="fa-solid fa-file-plus"></i> File Baru</button>
+      <button class="btn btn-sm btn-secondary" onclick="togglePreview()" id="previewBtn" title="Preview HTML"><i class="fa-solid fa-eye"></i> Preview</button>
+      <div class="toolbar-sep"></div>
+      <button class="btn btn-sm btn-secondary" onclick="fmtCode()" title="Format Kode"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+      <button class="btn btn-sm btn-secondary" onclick="toggleWrap()" title="Wrap"><i class="fa-solid fa-text-width"></i></button>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+        <label style="font-size:0.78rem;color:var(--text3);">Tema:</label>
+        <select id="editorTheme" onchange="changeTheme(this.value)" class="form-input" style="padding:4px 8px;font-size:0.78rem;width:110px;">
+          <option value="dracula">Dracula</option>
+          <option value="eclipse">Eclipse</option>
+          <option value="default">Default</option>
+        </select>
+        <label style="font-size:0.78rem;color:var(--text3);">Font:</label>
+        <select id="fontSize" onchange="changeFontSize(this.value)" class="form-input" style="padding:4px 8px;font-size:0.78rem;width:70px;">
+          <option value="12">12px</option>
+          <option value="14" selected>14px</option>
+          <option value="16">16px</option>
+          <option value="18">18px</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- FILE PANEL -->
+    <div class="editor-panel">
+      <div class="project-selector">
+        <select class="form-input" id="projectSelect" onchange="loadProjectFiles()" style="font-size:0.82rem;padding:7px 10px;">
+          <option value="">— Pilih Projek —</option>
+        </select>
+      </div>
+      <div class="panel-head">
+        <h3>File</h3>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-icon btn-secondary" style="padding:4px 6px;font-size:0.75rem;" onclick="newFile()" title="File Baru"><i class="fa-solid fa-plus"></i></button>
+          <button class="btn btn-icon btn-secondary" style="padding:4px 6px;font-size:0.75rem;" onclick="uploadFile()" title="Upload File"><i class="fa-solid fa-upload"></i></button>
+        </div>
+      </div>
+      <div class="panel-body" id="fileTree">
+        <div style="padding:20px;text-align:center;font-size:0.8rem;color:var(--text3);">Pilih projek untuk melihat file</div>
+      </div>
+    </div>
+
+    <!-- EDITOR MAIN -->
+    <div class="editor-main" id="editorMain">
+      <div class="file-tabs" id="fileTabs"></div>
+      <div class="editor-welcome" id="editorWelcome">
+        <i class="fa-solid fa-code"></i>
+        <h2>Selamat datang di Zyvedit</h2>
+        <p>Pilih projek dan klik file untuk mulai mengedit.<br>Atau buat file baru dengan tombol + di atas.</p>
+        <div style="margin-top:20px;">
+          <button class="btn btn-primary" onclick="document.getElementById('projectSelect').focus()">
+            <i class="fa-solid fa-folder-open"></i> Pilih Projek
+          </button>
+        </div>
+      </div>
+      <div id="cmWrap" style="flex:1;overflow:hidden;display:none;flex-direction:column;">
+        <textarea id="codeArea"></textarea>
+      </div>
+      <div class="status-bar" id="statusBar" style="display:none;">
+        <span id="sbFile">—</span>
+        <span id="sbLang">—</span>
+        <span id="sbCursor">Ln 1, Col 1</span>
+        <span id="sbSize">0 B</span>
+        <span id="sbMode">—</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PREVIEW MODAL -->
+  <div class="modal-overlay" id="previewModal" onclick="if(event.target===this)closePreview()">
+    <div class="modal" style="max-width:90vw;width:90vw;max-height:90vh;padding:0;overflow:hidden;border-radius:14px;">
+      <div style="background:var(--bg2);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);">
+        <span style="font-weight:800;font-size:0.9rem;">Preview</span>
+        <button class="btn btn-secondary btn-sm" onclick="closePreview()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <iframe id="previewFrame" style="width:100%;height:80vh;border:none;background:#fff;"></iframe>
+    </div>
+  </div>
+
+  <!-- NEW FILE MODAL -->
+  <div class="modal-overlay" id="newFileModal" onclick="if(event.target===this)closeNewFile()">
+    <div class="modal">
+      <div class="modal-title"><i class="fa-solid fa-file-plus" style="color:var(--accent);margin-right:8px;"></i>File Baru</div>
+      <div class="form-group">
+        <label class="form-label">Nama File</label>
+        <input type="text" class="form-input" id="newFileName" placeholder="contoh: index.html, style.css, script.js" onkeydown="if(event.key==='Enter')createNewFile()">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Konten Awal</label>
+        <textarea class="form-input" id="newFileContent" rows="4" placeholder="Opsional — kosongkan untuk file kosong"></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px;">
+        <button class="btn btn-secondary" onclick="closeNewFile()">Batal</button>
+        <button class="btn btn-primary" onclick="createNewFile()"><i class="fa-solid fa-check"></i> Buat</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="uploadInput" style="display:none" multiple onchange="handleUploadFiles(this)">
+  <div id="toast-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/php/php.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closetag.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/selection/active-line.min.js"></script>
+  <script src="app.js"></script>
+  <script>
+    const user = requireAuth();
+    if (!user) throw new Error();
+
+    let cm = null;
+    let currentProject = null;
+    let currentFile = null;
+    let openFiles = {}; // id -> { file, content }
+    let activeFileId = null;
+    let unsaved = false;
+
+    // Init CodeMirror
+    function initCM() {
+      cm = CodeMirror.fromTextArea(document.getElementById('codeArea'), {
+        theme: 'dracula',
+        lineNumbers: true,
+        matchBrackets: true,
+        autoCloseBrackets: true,
+        autoCloseTags: true,
+        styleActiveLine: true,
+        lineWrapping: false,
+        tabSize: 2,
+        indentWithTabs: false,
+      });
+      cm.on('change', () => {
+        unsaved = true;
+        document.getElementById('saveStatus').textContent = '● Belum tersimpan';
+        updateStatusBar();
+      });
+      cm.on('cursorActivity', updateStatusBar);
+      cm.setSize('100%', '100%');
+    }
+
+    function getModeForFile(name) {
+      const ext = name?.split('.').pop()?.toLowerCase();
+      const map = { html: 'htmlmixed', css: 'css', js: 'javascript', ts: 'javascript', json: 'javascript', py: 'python', php: 'php', xml: 'xml', svg: 'xml', md: 'markdown' };
+      return map[ext] || 'null';
+    }
+
+    function updateStatusBar() {
+      if (!cm || !currentFile) return;
+      const cursor = cm.getCursor();
+      document.getElementById('sbCursor').textContent = `Ln ${cursor.line+1}, Col ${cursor.ch+1}`;
+      document.getElementById('sbFile').textContent = currentFile.name;
+      document.getElementById('sbLang').textContent = getModeForFile(currentFile.name);
+      document.getElementById('sbSize').textContent = fmtSize(new Blob([cm.getValue()]).size);
+    }
+
+    // Load user projects
+    async function loadProjects() {
+      const { data } = await sb.from('projects_Zyan').select('id,name').eq('owner_id', user.id).order('name');
+      const sel = document.getElementById('projectSelect');
+      (data||[]).forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id; opt.textContent = p.name;
+        sel.appendChild(opt);
+      });
+      // Check URL param
+      const pid = new URLSearchParams(location.search).get('project');
+      if (pid) { sel.value = pid; loadProjectFiles(); }
+    }
+
+    async function loadProjectFiles() {
+      const pid = document.getElementById('projectSelect').value;
+      if (!pid) return;
+      currentProject = pid;
+
+      const { data } = await sb.from('files_Zyan').select('*').eq('project_id', pid).order('name');
+      const tree = document.getElementById('fileTree');
+      if (!data?.length) {
+        tree.innerHTML = '<div style="padding:16px;font-size:0.8rem;color:var(--text3);text-align:center;">Belum ada file.<br>Buat file baru!</div>';
+        return;
+      }
+      tree.innerHTML = data.map(f => `
+        <div class="file-item-zyv ${activeFileId === f.id ? 'active' : ''}" onclick="openFile('${f.id}')" id="ftree-${f.id}">
+          <span style="display:flex;align-items:center;gap:6px;overflow:hidden;">
+            <i class="${fileIcon(f.name)}"></i>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(f.name)}</span>
+            ${f.is_locked ? '<i class="fa-solid fa-lock lock-badge"></i>' : ''}
+          </span>
+          <span class="file-actions">
+            <button class="btn btn-icon btn-secondary" style="padding:2px 5px;font-size:0.68rem;" onclick="event.stopPropagation();renameFile('${f.id}','${escHtml(f.name).replace(/'/g,"\\'")}')"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-icon btn-danger" style="padding:2px 5px;font-size:0.68rem;" onclick="event.stopPropagation();deleteFile('${f.id}','${escHtml(f.name).replace(/'/g,"\\'")}')"><i class="fa-solid fa-trash"></i></button>
+          </span>
+        </div>
+      `).join('');
+    }
+
+    function fileIcon(name) {
+      const ext = name?.split('.').pop()?.toLowerCase();
+      const map = { html: 'fa-brands fa-html5', css: 'fa-brands fa-css3', js: 'fa-brands fa-js', ts: 'fa-solid fa-file-code', json: 'fa-solid fa-brackets-curly', py: 'fa-brands fa-python', php: 'fa-brands fa-php', md: 'fa-solid fa-file-lines', png: 'fa-solid fa-image', jpg: 'fa-solid fa-image', jpeg: 'fa-solid fa-image', gif: 'fa-solid fa-image', svg: 'fa-solid fa-bezier-curve' };
+      return `fa-solid ${map[ext] || 'fa-file-code'}`;
+    }
+
+    async function openFile(fileId) {
+      if (unsaved && activeFileId) {
+        if (!confirm('Ada perubahan yang belum disimpan. Lanjutkan?')) return;
+      }
+
+      const { data: f } = await sb.from('files_Zyan').select('*').eq('id', fileId).single();
+      if (!f) return;
+
+      if (f.is_locked) { toast('File ini dikunci!', 'error'); return; }
+
+      currentFile = f;
+      activeFileId = fileId;
+      unsaved = false;
+      document.getElementById('saveStatus').textContent = '';
+
+      // Add to open files
+      if (!openFiles[fileId]) openFiles[fileId] = { file: f, content: f.content || '' };
+      renderFileTabs();
+
+      // Show editor
+      document.getElementById('editorWelcome').style.display = 'none';
+      document.getElementById('cmWrap').style.display = 'flex';
+      document.getElementById('statusBar').style.display = 'flex';
+
+      if (!cm) initCM();
+
+      cm.setValue(f.content || '');
+      cm.setOption('mode', getModeForFile(f.name));
+      document.getElementById('sbMode').textContent = f.is_locked ? '🔒 Dikunci' : '✏️ Edit';
+      updateStatusBar();
+
+      // Refresh file tree
+      document.querySelectorAll('.file-item-zyv').forEach(el => el.classList.remove('active'));
+      document.getElementById(`ftree-${fileId}`)?.classList.add('active');
+    }
+
+    function renderFileTabs() {
+      const tabs = document.getElementById('fileTabs');
+      tabs.innerHTML = Object.values(openFiles).map(({ file }) => `
+        <div class="file-tab ${activeFileId === file.id ? 'active' : ''}" onclick="openFile('${file.id}')">
+          <i class="${fileIcon(file.name)}" style="font-size:0.75rem;"></i>
+          ${escHtml(file.name)}
+          <span class="close-tab" onclick="event.stopPropagation();closeTab('${file.id}')"><i class="fa-solid fa-xmark"></i></span>
+        </div>
+      `).join('');
+    }
+
+    function closeTab(fileId) {
+      delete openFiles[fileId];
+      if (activeFileId === fileId) {
+        const remaining = Object.keys(openFiles);
+        if (remaining.length) openFile(remaining[remaining.length - 1]);
+        else {
+          activeFileId = null; currentFile = null; unsaved = false;
+          document.getElementById('editorWelcome').style.display = 'flex';
+          document.getElementById('cmWrap').style.display = 'none';
+          document.getElementById('statusBar').style.display = 'none';
+          document.getElementById('fileTabs').innerHTML = '';
+        }
+      }
+      renderFileTabs();
+    }
+
+    async function saveFile() {
+      if (!currentFile || !cm) return;
+      const content = cm.getValue();
+      const { error } = await sb.from('files_Zyan').update({ content, updated_at: new Date().toISOString() }).eq('id', currentFile.id);
+      if (error) { toast('Gagal menyimpan!', 'error'); return; }
+      unsaved = false;
+      document.getElementById('saveStatus').textContent = '✓ Tersimpan';
+      setTimeout(() => document.getElementById('saveStatus').textContent = '', 2000);
+      toast('File disimpan!', 'success');
+    }
+
+    // Keyboard shortcut
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); saveFile(); }
+    });
+
+    function togglePreview() {
+      if (!cm) { toast('Buka file HTML terlebih dahulu', 'info'); return; }
+      const modal = document.getElementById('previewModal');
+      const frame = document.getElementById('previewFrame');
+      const content = cm.getValue();
+      modal.classList.add('active');
+      frame.srcdoc = content;
+    }
+    function closePreview() { document.getElementById('previewModal').classList.remove('active'); }
+
+    function newFile() {
+      if (!currentProject) { toast('Pilih projek terlebih dahulu!', 'info'); return; }
+      document.getElementById('newFileName').value = '';
+      document.getElementById('newFileContent').value = '';
+      document.getElementById('newFileModal').classList.add('active');
+      setTimeout(() => document.getElementById('newFileName').focus(), 100);
+    }
+    function closeNewFile() { document.getElementById('newFileModal').classList.remove('active'); }
+
+    async function createNewFile() {
+      const name = document.getElementById('newFileName').value.trim();
+      const content = document.getElementById('newFileContent').value;
+      if (!name) { toast('Nama file wajib diisi!', 'error'); return; }
+      const { data, error } = await sb.from('files_Zyan').insert({ project_id: currentProject, name, content, owner_id: user.id }).select().single();
+      if (error) { toast('Gagal membuat file: ' + error.message, 'error'); return; }
+      closeNewFile();
+      toast(`File "${name}" dibuat!`, 'success');
+      await loadProjectFiles();
+      if (data) openFile(data.id);
+    }
+
+    async function renameFile(id, oldName) {
+      const newName = prompt('Nama baru:', oldName);
+      if (!newName || newName === oldName) return;
+      await sb.from('files_Zyan').update({ name: newName }).eq('id', id);
+      toast('File diubah namanya!', 'success');
+      loadProjectFiles();
+      if (activeFileId === id) { currentFile.name = newName; updateStatusBar(); }
+    }
+
+    async function deleteFile(id, name) {
+      if (!confirm(`Hapus file "${name}"?`)) return;
+      await sb.from('files_Zyan').delete().eq('id', id);
+      delete openFiles[id];
+      if (activeFileId === id) closeTab(id);
+      loadProjectFiles();
+      toast('File dihapus', 'success');
+    }
+
+    function uploadFile() {
+      if (!currentProject) { toast('Pilih projek terlebih dahulu!', 'info'); return; }
+      document.getElementById('uploadInput').click();
+    }
+
+    async function handleUploadFiles(input) {
+      const files = [...input.files];
+      for (const file of files) {
+        const isImage = file.type.startsWith('image/');
+        if (isImage) {
+          const path = `projects/${currentProject}/${Date.now()}_${file.name}`;
+          const { error } = await sb.storage.from('zyvenqo').upload(path, file);
+          if (error) { toast(`Gagal upload ${file.name}`, 'error'); continue; }
+          const { data: urlData } = sb.storage.from('zyvenqo').getPublicUrl(path);
+          await sb.from('files_Zyan').insert({ project_id: currentProject, name: file.name, content: urlData.publicUrl, owner_id: user.id, is_media: true });
+        } else {
+          const text = await file.text();
+          await sb.from('files_Zyan').insert({ project_id: currentProject, name: file.name, content: text, owner_id: user.id });
+        }
+        toast(`File "${file.name}" diupload!`, 'success');
+      }
+      loadProjectFiles();
+      input.value = '';
+    }
+
+    function changeTheme(theme) {
+      if (cm) cm.setOption('theme', theme);
+    }
+    function changeFontSize(size) {
+      document.querySelectorAll('.CodeMirror').forEach(el => el.style.fontSize = size + 'px');
+    }
+    function toggleWrap() {
+      if (cm) cm.setOption('lineWrapping', !cm.getOption('lineWrapping'));
+    }
+    function fmtCode() { toast('Format otomatis belum tersedia untuk semua bahasa.', 'info'); }
+
+    function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    loadProjects();
+  </script>
+</body>
+</html>

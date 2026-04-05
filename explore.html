@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jelajahi — Zyvenqo</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .explore-header {
+      background: linear-gradient(135deg, rgba(108,99,255,0.12), rgba(0,212,170,0.06));
+      border: 1px solid rgba(108,99,255,0.2); border-radius: 16px;
+      padding: 28px 32px; margin-bottom: 28px;
+    }
+    .explore-header h1 { font-size: 1.5rem; font-weight: 800; margin-bottom: 14px; }
+    .explore-search-wrap {
+      display: flex; gap: 10px; flex-wrap: wrap;
+    }
+    .explore-search-wrap .search-bar { flex: 1; min-width: 240px; }
+    .filter-bar {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;
+      align-items: center;
+    }
+    .filter-btn {
+      padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border);
+      background: var(--bg2); color: var(--text2); font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; transition: all 0.15s; font-family: var(--font-main);
+    }
+    .filter-btn:hover, .filter-btn.active { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,0.08); }
+
+    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+
+    .exp-project-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; transition: all 0.2s; cursor: pointer; text-decoration: none;
+      display: block; color: var(--text); position: relative; overflow: hidden;
+    }
+    .exp-project-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2)); opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .exp-project-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 10px 30px rgba(108,99,255,0.15); text-decoration: none; color: var(--text); }
+    .exp-project-card:hover::before { opacity: 1; }
+
+    .card-owner { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+    .card-owner-name { font-size: 0.8rem; color: var(--text3); font-weight: 600; }
+    .card-title { font-size: 1rem; font-weight: 800; margin-bottom: 8px; }
+    .card-desc { font-size: 0.83rem; color: var(--text2); line-height: 1.6; margin-bottom: 14px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .card-tag {
+      padding: 2px 9px; border-radius: 12px; font-size: 0.72rem; font-weight: 700;
+      background: var(--bg3); color: var(--text3); font-family: var(--font-mono);
+    }
+    .card-footer { display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem; color: var(--text3); }
+
+    .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .exp-user-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px; text-align: center; transition: all 0.2s; cursor: pointer; text-decoration: none; color: var(--text);
+    }
+    .exp-user-card:hover { border-color: var(--accent); transform: translateY(-2px); text-decoration: none; color: var(--text); }
+    .exp-user-card .avatar { margin: 0 auto 10px; }
+    .exp-user-name { font-weight: 800; font-size: 0.95rem; }
+    .exp-user-handle { font-size: 0.78rem; color: var(--text3); font-family: var(--font-mono); margin-top: 2px; }
+    .exp-user-bio { font-size: 0.8rem; color: var(--text2); margin: 8px 0; line-height: 1.5;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .exp-user-stat { font-size: 0.78rem; color: var(--text3); margin-top: 10px; }
+
+    .result-count { font-size: 0.85rem; color: var(--text3); margin-bottom: 16px; }
+    .load-more-wrap { text-align: center; margin-top: 28px; }
+
+    .lang-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <button class="hamburger"><i class="fa-solid fa-bars"></i></button>
+    <a href="dashboard.html" class="logo"><span>Zyv</span><span style="color:var(--text)">enqo</span></a>
+    <nav style="margin-left:auto;">
+      <a href="dashboard.html" class="btn btn-secondary btn-sm"><i class="fa-solid fa-house"></i></a>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">Menu</div>
+      <a href="dashboard.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+      <a href="projects.html"><i class="fa-solid fa-folder"></i> Projek Saya</a>
+      <a href="explore.html" class="active"><i class="fa-solid fa-compass"></i> Jelajahi</a>
+      <a href="zyvedit.html"><i class="fa-solid fa-code"></i> Zyvedit</a>
+      <div class="sidebar-section">Sosial</div>
+      <a href="messages.html"><i class="fa-solid fa-envelope"></i> Pesan</a>
+      <a href="globalchat.html"><i class="fa-solid fa-comments"></i> Chat Global</a>
+      <div class="sidebar-section">Lainnya</div>
+      <a href="help.html"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+      <a href="settings.html"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+    </aside>
+
+    <main class="main-content">
+      <!-- EXPLORE HEADER -->
+      <div class="explore-header">
+        <h1><i class="fa-solid fa-compass" style="color:var(--accent);margin-right:10px;"></i>Jelajahi Zyvenqo</h1>
+        <div class="explore-search-wrap">
+          <div class="search-bar" style="flex:1;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Cari projek, username, atau deskripsi..." id="mainSearch" onkeydown="if(event.key==='Enter')doSearch()">
+          </div>
+          <button class="btn btn-primary" onclick="doSearch()"><i class="fa-solid fa-search"></i> Cari</button>
+        </div>
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs" data-group="explore">
+        <button class="tab-btn active" data-tab="projects">
+          <i class="fa-solid fa-folder"></i> Projek
+        </button>
+        <button class="tab-btn" data-tab="users">
+          <i class="fa-solid fa-users"></i> Pengguna
+        </button>
+      </div>
+
+      <!-- PROJECTS TAB -->
+      <div class="tab-panel active" data-tab="projects" data-group="explore">
+        <div class="filter-bar">
+          <span style="font-size:0.8rem;color:var(--text3);font-weight:700;">Urutkan:</span>
+          <button class="filter-btn active" onclick="setSort('newest', this)">Terbaru</button>
+          <button class="filter-btn" onclick="setSort('oldest', this)">Terlama</button>
+          <button class="filter-btn" onclick="setSort('name', this)">A-Z</button>
+          <div style="margin-left:auto;">
+            <span id="projectCount" class="result-count"></span>
+          </div>
+        </div>
+        <div id="projectsGrid" class="projects-grid">
+          <div style="grid-column:1/-1;text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></div>
+        </div>
+        <div class="load-more-wrap" id="loadMoreProjects" style="display:none;">
+          <button class="btn btn-secondary" onclick="loadMoreProjects()"><i class="fa-solid fa-chevron-down"></i> Muat Lebih Banyak</button>
+        </div>
+      </div>
+
+      <!-- USERS TAB -->
+      <div class="tab-panel" data-tab="users" data-group="explore">
+        <div style="margin-bottom:16px;"><span id="userCount" class="result-count"></span></div>
+        <div id="usersGrid" class="users-grid">
+          <div style="grid-column:1/-1;text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></div>
+        </div>
+        <div class="load-more-wrap" id="loadMoreUsers" style="display:none;">
+          <button class="btn btn-secondary" onclick="loadMoreUsers()"><i class="fa-solid fa-chevron-down"></i> Muat Lebih Banyak</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    loadSession();
+
+    let currentSort = 'newest';
+    let projectOffset = 0;
+    let userOffset = 0;
+    const PAGE_SIZE = 12;
+    let searchQuery = '';
+
+    // Read URL param
+    const urlParams = new URLSearchParams(location.search);
+    const q = urlParams.get('q');
+    if (q) {
+      document.getElementById('mainSearch').value = q;
+      searchQuery = q;
+    }
+
+    function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function setSort(sort, btn) {
+      currentSort = sort;
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      projectOffset = 0;
+      loadProjects(true);
+    }
+
+    function doSearch() {
+      searchQuery = document.getElementById('mainSearch').value.trim();
+      projectOffset = 0;
+      userOffset = 0;
+      loadProjects(true);
+      loadUsers(true);
+    }
+
+    function langColor(ext) {
+      const map = { html: '#e34c26', css: '#264de4', js: '#f0db4f', py: '#3572A5', ts: '#2b7489', php: '#777bb4', java: '#b07219', cpp: '#f34b7d', cs: '#178600', go: '#00ADD8', rs: '#dea584', rb: '#701516', swift: '#ffac45', kt: '#F18E33' };
+      return map[ext?.toLowerCase()] || '#9090a8';
+    }
+
+    async function loadProjects(reset = false) {
+      if (reset) { projectOffset = 0; document.getElementById('projectsGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></div>'; }
+
+      let q = sb.from('projects_Zyan').select('*, users_Zyan!owner_id(id, username, display_name, avatar_url)', { count: 'exact' })
+        .eq('visibility', 'public');
+
+      if (searchQuery) q = q.ilike('name', `%${searchQuery}%`);
+
+      if (currentSort === 'newest') q = q.order('created_at', { ascending: false });
+      else if (currentSort === 'oldest') q = q.order('created_at', { ascending: true });
+      else if (currentSort === 'name') q = q.order('name', { ascending: true });
+
+      const { data, count, error } = await q.range(projectOffset, projectOffset + PAGE_SIZE - 1);
+
+      if (error) { toast('Gagal memuat projek', 'error'); return; }
+
+      document.getElementById('projectCount').textContent = count !== null ? `${count} projek ditemukan` : '';
+
+      const html = (data||[]).map(p => {
+        const owner = p.users_Zyan || {};
+        const ext = p.name?.split('.').pop();
+        return `
+          <a class="exp-project-card" href="project.html?id=${p.id}">
+            <div class="card-owner">
+              ${avatarHTML(owner, 'sm')}
+              <span class="card-owner-name">${escHtml(owner.display_name || owner.username || 'Pengguna')}</span>
+            </div>
+            <div class="card-title">${escHtml(p.name)}</div>
+            <div class="card-desc">${escHtml(p.description || 'Tidak ada deskripsi.')}</div>
+            <div class="card-footer">
+              <span><i class="fa-regular fa-clock"></i> ${timeAgo(p.created_at)}</span>
+              <span class="badge badge-success" style="font-size:0.7rem;"><i class="fa-solid fa-globe"></i> Publik</span>
+            </div>
+          </a>`;
+      }).join('');
+
+      if (reset) {
+        document.getElementById('projectsGrid').innerHTML = html || `<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-folder-open"></i><h3>Tidak ada projek ditemukan</h3><p>Coba kata kunci lain.</p></div>`;
+      } else {
+        document.getElementById('projectsGrid').insertAdjacentHTML('beforeend', html);
+      }
+
+      projectOffset += PAGE_SIZE;
+      document.getElementById('loadMoreProjects').style.display = (data?.length === PAGE_SIZE) ? '' : 'none';
+    }
+
+    function loadMoreProjects() { loadProjects(false); }
+
+    async function loadUsers(reset = false) {
+      if (reset) { userOffset = 0; document.getElementById('usersGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></div>'; }
+
+      let q = sb.from('users_Zyan').select('*', { count: 'exact' }).eq('status', 'active');
+      if (currentUser) q = q.neq('id', currentUser.id);
+      if (searchQuery) q = q.or(`username.ilike.%${searchQuery}%,display_name.ilike.%${searchQuery}%`);
+      q = q.order('created_at', { ascending: false }).range(userOffset, userOffset + PAGE_SIZE - 1);
+
+      const { data, count } = await q;
+      document.getElementById('userCount').textContent = count !== null ? `${count} pengguna ditemukan` : '';
+
+      // Get project counts for users
+      const uids = (data||[]).map(u => u.id);
+      let projCounts = {};
+      if (uids.length) {
+        const { data: pData } = await sb.from('projects_Zyan').select('owner_id').in('owner_id', uids).eq('visibility', 'public');
+        (pData||[]).forEach(p => { projCounts[p.owner_id] = (projCounts[p.owner_id] || 0) + 1; });
+      }
+
+      const html = (data||[]).map(u => `
+        <a class="exp-user-card" href="messages.html?to=${u.id}">
+          <div class="avatar avatar-md" style="margin:0 auto 10px;">${u.avatar_url ? `<img class="avatar avatar-md" src="${u.avatar_url}" alt="${u.username}">` : (u.display_name||u.username||'?')[0].toUpperCase()}</div>
+          <div class="exp-user-name">${escHtml(u.display_name || u.username)}</div>
+          <div class="exp-user-handle">@${escHtml(u.username)}</div>
+          <div class="exp-user-bio">${escHtml(u.bio || 'Belum ada bio.')}</div>
+          <div class="exp-user-stat"><i class="fa-solid fa-folder" style="color:var(--accent);margin-right:4px;"></i>${projCounts[u.id] || 0} projek publik</div>
+        </a>
+      `).join('');
+
+      if (reset) {
+        document.getElementById('usersGrid').innerHTML = html || `<div class="empty-state" style="grid-column:1/-1"><i class="fa-solid fa-users"></i><h3>Tidak ada pengguna ditemukan</h3></div>`;
+      } else {
+        document.getElementById('usersGrid').insertAdjacentHTML('beforeend', html);
+      }
+
+      userOffset += PAGE_SIZE;
+      document.getElementById('loadMoreUsers').style.display = (data?.length === PAGE_SIZE) ? '' : 'none';
+    }
+
+    function loadMoreUsers() { loadUsers(false); }
+
+    loadProjects(true);
+    loadUsers(true);
+  </script>
+</body>
+</html>

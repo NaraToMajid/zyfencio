@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengaturan — Zyvenqo</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .settings-layout { display: grid; grid-template-columns: 220px 1fr; gap: 24px; align-items: start; }
+
+    /* Settings Nav */
+    .settings-nav {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 8px; position: sticky; top: 80px;
+    }
+    .settings-nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 8px; color: var(--text2);
+      font-size: 0.88rem; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .settings-nav-item:hover { color: var(--text); background: var(--bg3); }
+    .settings-nav-item.active { color: var(--accent); background: rgba(108,99,255,0.1); }
+    .settings-nav-item i { width: 16px; text-align: center; font-size: 0.82rem; }
+    .settings-nav-section { padding: 8px 14px 4px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text3); }
+
+    /* Settings Panel */
+    .settings-panel { display: none; }
+    .settings-panel.active { display: block; }
+
+    .settings-section { margin-bottom: 28px; }
+    .settings-section-title { font-size: 1rem; font-weight: 800; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+    /* Avatar upload */
+    .avatar-upload-area {
+      display: flex; align-items: center; gap: 20px; padding: 20px;
+      background: var(--bg3); border-radius: 12px; border: 2px dashed var(--border);
+      transition: border-color 0.2s;
+    }
+    .avatar-upload-area:hover { border-color: var(--accent); }
+    .avatar-upload-info { flex: 1; }
+    .avatar-upload-info p { font-size: 0.82rem; color: var(--text3); margin-top: 4px; }
+
+    /* Password strength */
+    .password-strength { margin-top: 6px; }
+    .strength-bar { height: 4px; border-radius: 2px; background: var(--bg3); overflow: hidden; margin-bottom: 4px; }
+    .strength-fill { height: 100%; border-radius: 2px; transition: all 0.3s; width: 0; }
+    .strength-text { font-size: 0.75rem; color: var(--text3); }
+
+    /* Theme toggle */
+    .theme-option {
+      display: flex; align-items: center; gap: 14px;
+      padding: 16px; border-radius: 10px; border: 2px solid var(--border);
+      cursor: pointer; transition: all 0.2s; margin-bottom: 10px;
+    }
+    .theme-option:hover { border-color: var(--accent); }
+    .theme-option.active { border-color: var(--accent); background: rgba(108,99,255,0.07); }
+    .theme-preview { width: 50px; height: 34px; border-radius: 6px; flex-shrink: 0; border: 1px solid var(--border); }
+    .theme-option h4 { font-size: 0.9rem; font-weight: 800; margin-bottom: 2px; }
+    .theme-option p { font-size: 0.78rem; color: var(--text2); }
+
+    /* Danger zone */
+    .danger-zone { border: 1px solid rgba(255,71,87,0.3); border-radius: 12px; padding: 20px; background: rgba(255,71,87,0.04); }
+    .danger-zone h3 { color: var(--danger); font-size: 0.95rem; font-weight: 800; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; }
+
+    /* Toggle switch */
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-info h4 { font-size: 0.88rem; font-weight: 700; margin-bottom: 2px; }
+    .toggle-info p { font-size: 0.78rem; color: var(--text2); }
+    .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; inset: 0; background: var(--bg3); border-radius: 22px; cursor: pointer; transition: 0.2s; border: 1.5px solid var(--border); }
+    .toggle-slider::before { content: ''; position: absolute; left: 2px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; border-radius: 50%; background: var(--text3); transition: 0.2s; }
+    .toggle-switch input:checked + .toggle-slider { background: var(--accent); border-color: var(--accent); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translate(18px, -50%); background: #fff; }
+
+    @media (max-width: 900px) {
+      .settings-layout { grid-template-columns: 1fr; }
+      .settings-nav { position: relative; top: 0; }
+      .settings-nav { display: flex; gap: 4px; overflow-x: auto; padding: 8px; flex-wrap: nowrap; }
+      .settings-nav-section { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <button class="hamburger"><i class="fa-solid fa-bars"></i></button>
+    <a href="dashboard.html" class="logo"><span>Zyv</span><span style="color:var(--text)">enqo</span></a>
+    <nav style="margin-left:auto;">
+      <a href="dashboard.html" class="btn btn-secondary btn-sm"><i class="fa-solid fa-house"></i></a>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">Menu</div>
+      <a href="dashboard.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+      <a href="projects.html"><i class="fa-solid fa-folder"></i> Projek Saya</a>
+      <a href="explore.html"><i class="fa-solid fa-compass"></i> Jelajahi</a>
+      <a href="zyvedit.html"><i class="fa-solid fa-code"></i> Zyvedit</a>
+      <div class="sidebar-section">Sosial</div>
+      <a href="messages.html"><i class="fa-solid fa-envelope"></i> Pesan</a>
+      <a href="globalchat.html"><i class="fa-solid fa-comments"></i> Chat Global</a>
+      <div class="sidebar-section">Lainnya</div>
+      <a href="help.html"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+      <a href="settings.html" class="active"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-header">
+        <h1 class="page-title">Pengaturan</h1>
+        <p class="page-sub">Kelola profil, akun, dan preferensi kamu.</p>
+      </div>
+
+      <div class="settings-layout">
+        <!-- NAV -->
+        <div class="settings-nav">
+          <div class="settings-nav-section">Akun</div>
+          <div class="settings-nav-item active" onclick="showPanel('profile', this)"><i class="fa-solid fa-user"></i> Profil</div>
+          <div class="settings-nav-item" onclick="showPanel('password', this)"><i class="fa-solid fa-lock"></i> Password</div>
+          <div class="settings-nav-section">Preferensi</div>
+          <div class="settings-nav-item" onclick="showPanel('appearance', this)"><i class="fa-solid fa-palette"></i> Tampilan</div>
+          <div class="settings-nav-item" onclick="showPanel('notif', this)"><i class="fa-solid fa-bell"></i> Notifikasi</div>
+          <div class="settings-nav-section">Bahaya</div>
+          <div class="settings-nav-item" onclick="showPanel('danger', this)" style="color:var(--danger);"><i class="fa-solid fa-triangle-exclamation"></i> Zona Bahaya</div>
+        </div>
+
+        <!-- PANELS -->
+        <div>
+          <!-- PROFILE -->
+          <div class="settings-panel active card" id="panel-profile">
+            <div class="settings-section">
+              <div class="settings-section-title">Foto Profil</div>
+              <div class="avatar-upload-area">
+                <div id="currentAvatarWrap"></div>
+                <div class="avatar-upload-info">
+                  <div style="font-weight:800;margin-bottom:4px;">Ganti Foto Profil</div>
+                  <p>JPG, PNG, atau GIF. Maks 2MB.</p>
+                  <label class="btn btn-secondary btn-sm" style="margin-top:8px;cursor:pointer;">
+                    <i class="fa-solid fa-upload"></i> Upload Foto
+                    <input type="file" id="avatarInput" accept="image/*" style="display:none" onchange="uploadAvatar(this)">
+                  </label>
+                  <button class="btn btn-danger btn-sm" style="margin-top:8px;" onclick="removeAvatar()">
+                    <i class="fa-solid fa-trash"></i> Hapus Foto
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-title">Informasi Profil</div>
+              <div class="form-group">
+                <label class="form-label">Nama Tampilan</label>
+                <input type="text" class="form-input" id="displayName" placeholder="Nama yang tampil ke pengguna lain" maxlength="50">
+                <div style="font-size:0.75rem;color:var(--text3);margin-top:4px;"><span id="displayNameCount">0</span>/50</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" class="form-input" id="username" placeholder="username unik" maxlength="30">
+                <div style="font-size:0.75rem;color:var(--text3);margin-top:4px;">Hanya huruf, angka, dan underscore. <span id="usernameCount">0</span>/30</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Bio</label>
+                <textarea class="form-input" id="bio" placeholder="Ceritakan sedikit tentang dirimu..." rows="3" maxlength="200"></textarea>
+                <div style="font-size:0.75rem;color:var(--text3);margin-top:4px;"><span id="bioCount">0</span>/200</div>
+              </div>
+              <button class="btn btn-primary" onclick="saveProfile()" id="saveProfileBtn">
+                <i class="fa-solid fa-check"></i> Simpan Perubahan
+              </button>
+            </div>
+          </div>
+
+          <!-- PASSWORD -->
+          <div class="settings-panel card" id="panel-password">
+            <div class="settings-section">
+              <div class="settings-section-title">Ganti Password</div>
+              <div class="form-group">
+                <label class="form-label">Password Saat Ini</label>
+                <div style="position:relative;">
+                  <input type="password" class="form-input" id="currentPw" placeholder="Password saat ini" style="padding-right:42px;">
+                  <button onclick="togglePw('currentPw', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);"><i class="fa-solid fa-eye"></i></button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Password Baru</label>
+                <div style="position:relative;">
+                  <input type="password" class="form-input" id="newPw" placeholder="Minimal 8 karakter" oninput="checkStrength(this.value)" style="padding-right:42px;">
+                  <button onclick="togglePw('newPw', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);"><i class="fa-solid fa-eye"></i></button>
+                </div>
+                <div class="password-strength">
+                  <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+                  <span class="strength-text" id="strengthText"></span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Konfirmasi Password Baru</label>
+                <input type="password" class="form-input" id="confirmPw" placeholder="Ulangi password baru">
+              </div>
+              <div style="background:rgba(108,99,255,0.07);border:1px solid rgba(108,99,255,0.2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:0.82rem;color:var(--text2);">
+                <i class="fa-solid fa-circle-info" style="color:var(--accent);margin-right:6px;"></i>
+                Password minimal 8 karakter, kombinasi huruf dan angka disarankan.
+              </div>
+              <button class="btn btn-primary" onclick="changePassword()">
+                <i class="fa-solid fa-lock"></i> Ganti Password
+              </button>
+            </div>
+          </div>
+
+          <!-- APPEARANCE -->
+          <div class="settings-panel card" id="panel-appearance">
+            <div class="settings-section">
+              <div class="settings-section-title">Tema Tampilan</div>
+              <div class="theme-option active" id="theme-dark" onclick="setTheme('dark')">
+                <div class="theme-preview" style="background:#0a0a0f;border:1px solid #2a2a38;">
+                  <div style="height:8px;background:#111118;border-radius:4px 4px 0 0;margin-bottom:3px;"></div>
+                  <div style="height:4px;background:#6c63ff;border-radius:2px;margin:0 6px;"></div>
+                </div>
+                <div>
+                  <h4>Gelap (Dark)</h4>
+                  <p>Latar hitam dengan aksen ungu. Cocok untuk coding malam hari.</p>
+                </div>
+                <i class="fa-solid fa-check" style="color:var(--accent);margin-left:auto;" id="check-dark"></i>
+              </div>
+              <div class="theme-option" id="theme-light" onclick="setTheme('light')">
+                <div class="theme-preview" style="background:#f4f4f8;">
+                  <div style="height:8px;background:#ffffff;border-radius:4px 4px 0 0;margin-bottom:3px;"></div>
+                  <div style="height:4px;background:#6c63ff;border-radius:2px;margin:0 6px;"></div>
+                </div>
+                <div>
+                  <h4>Terang (Light)</h4>
+                  <p>Latar terang, lebih nyaman di siang hari.</p>
+                </div>
+                <i class="fa-solid fa-check" style="color:var(--accent);margin-left:auto;display:none;" id="check-light"></i>
+              </div>
+            </div>
+
+            <div class="settings-section">
+              <div class="settings-section-title">Aksesibilitas</div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>Animasi Dikurangi</h4>
+                  <p>Kurangi animasi untuk pengalaman lebih nyaman.</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="reduceMotion" onchange="savePrefs()">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>Font Compact</h4>
+                  <p>Gunakan ukuran font lebih kecil untuk menampilkan lebih banyak konten.</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="compactFont" onchange="applyCompact(this.checked)">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOTIF -->
+          <div class="settings-panel card" id="panel-notif">
+            <div class="settings-section">
+              <div class="settings-section-title">Notifikasi</div>
+              <p style="font-size:0.85rem;color:var(--text2);margin-bottom:16px;">Atur notifikasi mana yang ingin kamu terima.</p>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>Pesan Baru</h4>
+                  <p>Tampilkan indikator pesan yang belum dibaca.</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="notifMsg" checked onchange="savePrefs()">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>Chat Global</h4>
+                  <p>Tampilkan indikator pesan baru di Chat Global.</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="notifGlobal" checked onchange="savePrefs()">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <div class="toggle-row">
+                <div class="toggle-info">
+                  <h4>Pengguna Online</h4>
+                  <p>Tampilkan daftar pengguna aktif di dashboard.</p>
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="showOnline" checked onchange="savePrefs()">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- DANGER ZONE -->
+          <div class="settings-panel" id="panel-danger">
+            <div class="danger-zone">
+              <h3><i class="fa-solid fa-triangle-exclamation"></i> Zona Bahaya</h3>
+
+              <div style="margin-bottom:20px;">
+                <div style="font-weight:800;margin-bottom:6px;">Keluar dari Semua Perangkat</div>
+                <div style="font-size:0.85rem;color:var(--text2);margin-bottom:12px;">Hapus sesi aktif dari semua perangkat. Kamu perlu login ulang.</div>
+                <button class="btn btn-secondary" onclick="logoutAll()">
+                  <i class="fa-solid fa-right-from-bracket"></i> Keluar dari Semua Perangkat
+                </button>
+              </div>
+
+              <div class="divider" style="border-color:rgba(255,71,87,0.2);"></div>
+
+              <div>
+                <div style="font-weight:800;margin-bottom:6px;color:var(--danger);">Hapus Akun</div>
+                <div style="font-size:0.85rem;color:var(--text2);margin-bottom:12px;">Menghapus akun akan menghapus semua projek, file, dan datamu secara permanen. Tindakan ini tidak bisa dibatalkan.</div>
+                <button class="btn btn-danger" onclick="deleteAccount()">
+                  <i class="fa-solid fa-skull"></i> Hapus Akun Saya
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    const user = requireAuth();
+    if (!user) throw new Error();
+
+    function showPanel(id, navEl) {
+      document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('panel-' + id).classList.add('active');
+      document.querySelectorAll('.settings-nav-item').forEach(n => n.classList.remove('active'));
+      navEl.classList.add('active');
+    }
+
+    // Init profile
+    function initProfile() {
+      document.getElementById('currentAvatarWrap').outerHTML = `<div id="currentAvatarWrap">${avatarHTML(user, 'lg')}</div>`;
+      document.getElementById('displayName').value = user.display_name || '';
+      document.getElementById('username').value = user.username || '';
+      document.getElementById('bio').value = user.bio || '';
+      updateCounts();
+    }
+
+    function updateCounts() {
+      document.getElementById('displayNameCount').textContent = (document.getElementById('displayName').value||'').length;
+      document.getElementById('usernameCount').textContent = (document.getElementById('username').value||'').length;
+      document.getElementById('bioCount').textContent = (document.getElementById('bio').value||'').length;
+    }
+    document.getElementById('displayName').oninput = updateCounts;
+    document.getElementById('username').oninput = updateCounts;
+    document.getElementById('bio').oninput = updateCounts;
+
+    async function uploadAvatar(input) {
+      if (!input.files[0]) return;
+      const file = input.files[0];
+      if (file.size > 2 * 1024 * 1024) { toast('Ukuran gambar maks 2MB!', 'error'); return; }
+      const path = `avatars/${user.id}_${Date.now()}`;
+      const { error } = await sb.storage.from('zyvenqo').upload(path, file, { upsert: true });
+      if (error) { toast('Gagal upload foto!', 'error'); return; }
+      const { data: urlData } = sb.storage.from('zyvenqo').getPublicUrl(path);
+      const url = urlData.publicUrl;
+      await sb.from('users_Zyan').update({ avatar_url: url }).eq('id', user.id);
+      user.avatar_url = url;
+      saveSession(user);
+      document.getElementById('currentAvatarWrap').innerHTML = avatarHTML(user, 'lg');
+      toast('Foto profil diperbarui!', 'success');
+    }
+
+    async function removeAvatar() {
+      if (!confirm('Hapus foto profil?')) return;
+      await sb.from('users_Zyan').update({ avatar_url: null }).eq('id', user.id);
+      user.avatar_url = null;
+      saveSession(user);
+      document.getElementById('currentAvatarWrap').innerHTML = avatarHTML(user, 'lg');
+      toast('Foto profil dihapus', 'success');
+    }
+
+    async function saveProfile() {
+      const displayName = document.getElementById('displayName').value.trim();
+      const username = document.getElementById('username').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+      const bio = document.getElementById('bio').value.trim();
+
+      if (!username) { toast('Username wajib diisi!', 'error'); return; }
+      if (username.length < 3) { toast('Username minimal 3 karakter!', 'error'); return; }
+
+      document.getElementById('saveProfileBtn').disabled = true;
+      document.getElementById('saveProfileBtn').innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> Menyimpan...';
+
+      // Check username taken
+      if (username !== user.username) {
+        const { data: existing } = await sb.from('users_Zyan').select('id').eq('username', username).neq('id', user.id).single();
+        if (existing) {
+          toast('Username sudah digunakan!', 'error');
+          document.getElementById('saveProfileBtn').disabled = false;
+          document.getElementById('saveProfileBtn').innerHTML = '<i class="fa-solid fa-check"></i> Simpan Perubahan';
+          return;
+        }
+      }
+
+      const { error } = await sb.from('users_Zyan').update({ display_name: displayName, username, bio }).eq('id', user.id);
+      if (error) { toast('Gagal menyimpan: ' + error.message, 'error'); }
+      else {
+        user.display_name = displayName;
+        user.username = username;
+        user.bio = bio;
+        saveSession(user);
+        toast('Profil berhasil disimpan!', 'success');
+      }
+
+      document.getElementById('saveProfileBtn').disabled = false;
+      document.getElementById('saveProfileBtn').innerHTML = '<i class="fa-solid fa-check"></i> Simpan Perubahan';
+    }
+
+    // Password
+    function togglePw(id, btn) {
+      const inp = document.getElementById(id);
+      const isText = inp.type === 'text';
+      inp.type = isText ? 'password' : 'text';
+      btn.innerHTML = `<i class="fa-solid fa-${isText ? 'eye' : 'eye-slash'}"></i>`;
+    }
+
+    function checkStrength(pw) {
+      let score = 0;
+      if (pw.length >= 8) score++;
+      if (/[A-Z]/.test(pw)) score++;
+      if (/[0-9]/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
+      const fill = document.getElementById('strengthFill');
+      const text = document.getElementById('strengthText');
+      const colors = ['', '#ff4757', '#ffa502', '#2ed573', '#00d4aa'];
+      const labels = ['', 'Lemah', 'Cukup', 'Kuat', 'Sangat Kuat'];
+      fill.style.width = (score * 25) + '%';
+      fill.style.background = colors[score] || 'var(--bg3)';
+      text.textContent = labels[score] || '';
+      text.style.color = colors[score];
+    }
+
+    async function changePassword() {
+      const cur = document.getElementById('currentPw').value;
+      const newPw = document.getElementById('newPw').value;
+      const confirm = document.getElementById('confirmPw').value;
+
+      if (!cur || !newPw || !confirm) { toast('Semua field wajib diisi!', 'error'); return; }
+      if (newPw.length < 8) { toast('Password baru minimal 8 karakter!', 'error'); return; }
+      if (newPw !== confirm) { toast('Konfirmasi password tidak cocok!', 'error'); return; }
+
+      // Verify current password
+      const curHash = await hashPassword(cur);
+      const { data: u } = await sb.from('users_Zyan').select('password_hash').eq('id', user.id).single();
+      if (u?.password_hash !== curHash) { toast('Password saat ini salah!', 'error'); return; }
+
+      const newHash = await hashPassword(newPw);
+      const { error } = await sb.from('users_Zyan').update({ password_hash: newHash }).eq('id', user.id);
+      if (error) { toast('Gagal mengganti password!', 'error'); return; }
+
+      document.getElementById('currentPw').value = '';
+      document.getElementById('newPw').value = '';
+      document.getElementById('confirmPw').value = '';
+      document.getElementById('strengthFill').style.width = '0';
+      document.getElementById('strengthText').textContent = '';
+      toast('Password berhasil diganti!', 'success');
+    }
+
+    // Theme
+    function setTheme(theme) {
+      applyTheme(theme);
+      document.querySelectorAll('.theme-option').forEach(el => el.classList.remove('active'));
+      document.getElementById('theme-' + theme).classList.add('active');
+      document.getElementById('check-dark').style.display = theme === 'dark' ? '' : 'none';
+      document.getElementById('check-light').style.display = theme === 'light' ? '' : 'none';
+    }
+
+    function initThemePanel() {
+      const curr = localStorage.getItem('zyv_theme') || 'dark';
+      document.getElementById('theme-' + curr)?.classList.add('active');
+      document.getElementById('check-' + curr).style.display = '';
+      const other = curr === 'dark' ? 'light' : 'dark';
+      document.getElementById('check-' + other).style.display = 'none';
+      document.getElementById('theme-' + other)?.classList.remove('active');
+    }
+
+    function applyCompact(val) {
+      document.documentElement.style.fontSize = val ? '14px' : '';
+      savePrefs();
+    }
+
+    function savePrefs() {
+      const prefs = {
+        reduceMotion: document.getElementById('reduceMotion').checked,
+        compactFont: document.getElementById('compactFont').checked,
+        notifMsg: document.getElementById('notifMsg').checked,
+        notifGlobal: document.getElementById('notifGlobal').checked,
+        showOnline: document.getElementById('showOnline').checked,
+      };
+      localStorage.setItem('zyv_prefs', JSON.stringify(prefs));
+    }
+
+    function loadPrefs() {
+      try {
+        const prefs = JSON.parse(localStorage.getItem('zyv_prefs') || '{}');
+        if (prefs.reduceMotion !== undefined) document.getElementById('reduceMotion').checked = prefs.reduceMotion;
+        if (prefs.compactFont !== undefined) { document.getElementById('compactFont').checked = prefs.compactFont; if (prefs.compactFont) document.documentElement.style.fontSize = '14px'; }
+        if (prefs.notifMsg !== undefined) document.getElementById('notifMsg').checked = prefs.notifMsg;
+        if (prefs.notifGlobal !== undefined) document.getElementById('notifGlobal').checked = prefs.notifGlobal;
+        if (prefs.showOnline !== undefined) document.getElementById('showOnline').checked = prefs.showOnline;
+      } catch {}
+    }
+
+    function logoutAll() {
+      if (!confirm('Yakin ingin keluar dari semua perangkat?')) return;
+      clearSession();
+      toast('Berhasil keluar!', 'success');
+      setTimeout(() => window.location.href = 'auth.html', 1000);
+    }
+
+    async function deleteAccount() {
+      const confirm1 = confirm('PERINGATAN! Tindakan ini akan menghapus SEMUA data kamu secara permanen. Lanjutkan?');
+      if (!confirm1) return;
+      const confirm2 = prompt('Ketik username kamu untuk konfirmasi penghapusan akun:');
+      if (confirm2 !== user.username) { toast('Username tidak cocok!', 'error'); return; }
+
+      toast('Menghapus akun...', 'info');
+      // In a real app, you'd cascade delete projects/files/messages first
+      await sb.from('users_Zyan').delete().eq('id', user.id);
+      clearSession();
+      toast('Akun dihapus. Sampai jumpa!', 'success');
+      setTimeout(() => window.location.href = 'index.html', 1500);
+    }
+
+    initProfile();
+    initThemePanel();
+    loadPrefs();
+  </script>
+</body>
+</html>
