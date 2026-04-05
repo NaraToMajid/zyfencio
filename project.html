@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projek — Zyvenqo</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .project-layout { display: grid; grid-template-columns: 260px 1fr; gap: 0; height: calc(100vh - 58px); }
+    .file-sidebar { background: var(--bg2); border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
+    .file-sidebar-header { padding: 16px; border-bottom: 1px solid var(--border); }
+    .file-sidebar-header h3 { font-weight: 800; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .file-sidebar-actions { display: flex; gap: 6px; margin-top: 10px; }
+    .file-list { padding: 8px; flex: 1; overflow-y: auto; }
+    .file-viewer { display: flex; flex-direction: column; overflow: hidden; }
+    .viewer-tabs { background: var(--bg2); border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; align-items: center; padding: 0 8px; flex-shrink: 0; }
+    .viewer-tab {
+      display: flex; align-items: center; gap: 7px;
+      padding: 10px 14px; font-size: 0.82rem; font-family: var(--font-mono);
+      color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent;
+      white-space: nowrap; transition: all 0.15s; background: none; border-top: none; border-left: none; border-right: none;
+    }
+    .viewer-tab:hover { color: var(--text); }
+    .viewer-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .viewer-tab .close-tab { opacity: 0.4; font-size: 0.7rem; margin-left: 2px; }
+    .viewer-tab:hover .close-tab { opacity: 1; }
+    .viewer-content { flex: 1; overflow: auto; background: var(--bg); }
+    .code-view { padding: 16px; font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.75; white-space: pre-wrap; word-break: break-all; }
+    .line-numbers { display: flex; gap: 0; }
+    .line-nums-col { padding: 16px 12px 16px 16px; color: var(--text3); font-family: var(--font-mono); font-size: 0.84rem; line-height: 1.75; text-align: right; border-right: 1px solid var(--border); user-select: none; min-width: 50px; }
+    .code-col { padding: 16px; flex: 1; }
+    
+    .locked-file { text-align: center; padding: 60px 20px; color: var(--text3); }
+    .locked-file i { font-size: 2.5rem; margin-bottom: 14px; display: block; color: var(--warn); }
+    
+    /* PREVIEW iframe */
+    .preview-frame { width: 100%; height: 100%; border: none; }
+
+    /* Project info header */
+    .proj-header {
+      background: var(--bg2); border-bottom: 1px solid var(--border);
+      padding: 12px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; flex-shrink: 0;
+    }
+    .proj-header h1 { font-size: 1.1rem; font-weight: 800; }
+
+    @media (max-width: 768px) {
+      .project-layout { grid-template-columns: 1fr; }
+      .file-sidebar { max-height: 250px; border-right: none; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body style="overflow:hidden;">
+  <header class="topbar">
+    <a href="projects.html" class="btn btn-secondary btn-sm"><i class="fa-solid fa-arrow-left"></i> Kembali</a>
+    <a href="index.html" class="logo" style="margin-left:8px;"><span>Zyv</span><span style="color:var(--text)">enqo</span></a>
+    <nav style="margin-left:auto;">
+      <button class="btn btn-secondary btn-sm" id="btnPreview" onclick="togglePreview()" style="display:none;">
+        <i class="fa-solid fa-eye"></i> Lihat Tampilan
+      </button>
+      <button class="btn btn-primary btn-sm" id="btnEdit" onclick="openZyvedit()">
+        <i class="fa-solid fa-pen-to-square"></i> Zyvedit
+      </button>
+      <button class="btn btn-secondary btn-sm" onclick="openReport()">
+        <i class="fa-solid fa-flag"></i>
+      </button>
+    </nav>
+  </header>
+
+  <div class="project-layout" style="padding-top:58px;">
+    <!-- FILE SIDEBAR -->
+    <div class="file-sidebar">
+      <div class="file-sidebar-header">
+        <h3 id="projTitle">Memuat...</h3>
+        <div id="projMeta" style="font-size:0.78rem;color:var(--text3);margin-top:4px;"></div>
+        <div class="file-sidebar-actions" id="ownerActions" style="display:none;">
+          <button class="btn btn-primary btn-sm" onclick="addFileModal()">
+            <i class="fa-solid fa-plus"></i> File
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="uploadFileModal()">
+            <i class="fa-solid fa-upload"></i>
+          </button>
+        </div>
+      </div>
+      <div class="file-list" id="fileList">
+        <div class="spinner" style="margin:20px auto;"></div>
+      </div>
+    </div>
+
+    <!-- VIEWER -->
+    <div class="file-viewer">
+      <div class="proj-header">
+        <i class="fa-solid fa-code" style="color:var(--accent)"></i>
+        <h1 id="projNameHeader">—</h1>
+        <span class="badge badge-neutral" id="projVisTag"></span>
+        <span id="ownerBadge" style="margin-left:auto;font-size:0.8rem;color:var(--text3);"></span>
+      </div>
+      <div class="viewer-tabs" id="viewerTabs">
+        <span style="font-size:0.8rem;color:var(--text3);padding:12px 8px;">Pilih file dari kiri</span>
+      </div>
+      <div class="viewer-content" id="viewerContent">
+        <div class="empty-state" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+          <i class="fa-solid fa-file-code"></i>
+          <h3>Pilih file untuk melihat isinya</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD FILE MODAL -->
+  <div class="modal-overlay" id="addFileModal">
+    <div class="modal">
+      <div class="modal-title">Tambah File Baru</div>
+      <div class="form-group">
+        <label class="form-label">Nama File</label>
+        <input type="text" class="form-input" id="newFileName" placeholder="misal: script.js">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Isi File</label>
+        <textarea class="form-input" id="newFileContent" rows="6" style="font-family:var(--font-mono);font-size:0.83rem;"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">
+          <input type="checkbox" id="newFileLocked"> Kunci File (hanya kamu yang bisa lihat isi)
+        </label>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="addFile()">
+          <i class="fa-solid fa-plus"></i> Tambah
+        </button>
+        <button class="btn btn-secondary" onclick="closeModal('addFileModal')">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD ASSET MODAL -->
+  <div class="modal-overlay" id="uploadModal">
+    <div class="modal">
+      <div class="modal-title">Upload File / Aset</div>
+      <input type="file" id="assetUploadInp" multiple class="form-input" style="padding:8px;">
+      <p style="font-size:0.8rem;color:var(--text2);margin:8px 0 16px;">Gambar akan dapat diakses di URL: /assets/namafile</p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="uploadAsset()">Upload</button>
+        <button class="btn btn-secondary" onclick="closeModal('uploadModal')">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORT MODAL -->
+  <div class="modal-overlay" id="reportModal">
+    <div class="modal">
+      <div class="modal-title"><i class="fa-solid fa-flag" style="color:var(--danger)"></i> Laporkan Projek</div>
+      <div class="form-group">
+        <label class="form-label">Alasan Laporan</label>
+        <textarea class="form-input" id="reportReason" rows="3" placeholder="Jelaskan masalahnya..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-danger" style="flex:1;justify-content:center;" onclick="submitReport()">Kirim Laporan</button>
+        <button class="btn btn-secondary" onclick="closeModal('reportModal')">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    const user = loadSession();
+    const projId = new URLSearchParams(location.search).get('id');
+    if (!projId) window.location.href = 'explore.html';
+
+    let project = null;
+    let files = [];
+    let openTabs = [];
+    let activeFile = null;
+    let isOwner = false;
+    let showingPreview = false;
+
+    async function loadProject() {
+      const { data: proj } = await sb.from('projects_Zyan').select('*, users_Zyan(username,display_name,avatar_url)').eq('id', projId).single();
+      if (!proj) { toast('Projek tidak ditemukan!', 'error'); return; }
+      if (proj.visibility === 'private' && proj.owner_id !== user?.id) {
+        document.getElementById('viewerContent').innerHTML = `<div class="empty-state" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;"><i class="fa-solid fa-lock"></i><h3>Projek Privat</h3><p>Projek ini tidak dapat diakses.</p></div>`;
+        return;
+      }
+      project = proj;
+      isOwner = user?.id === proj.owner_id;
+
+      document.title = `${proj.name} — Zyvenqo`;
+      document.getElementById('projTitle').textContent = proj.name;
+      document.getElementById('projNameHeader').textContent = proj.name;
+      document.getElementById('projVisTag').innerHTML = `<i class="fa-solid fa-${proj.visibility === 'public' ? 'globe' : 'lock'}"></i> ${proj.visibility === 'public' ? 'Publik' : 'Privat'}`;
+      document.getElementById('projMeta').textContent = `oleh ${proj.users_Zyan?.display_name || proj.users_Zyan?.username}`;
+      document.getElementById('ownerBadge').textContent = `oleh @${proj.users_Zyan?.username || ''}`;
+      if (isOwner) document.getElementById('ownerActions').style.display = '';
+      if (!user) document.getElementById('btnEdit').style.display = 'none';
+
+      loadFiles();
+    }
+
+    async function loadFiles() {
+      const { data } = await sb.from('files_Zyan').select('*').eq('project_id', projId).order('name');
+      files = data || [];
+      renderFileList();
+
+      // Check for index.html
+      const hasIndex = files.some(f => f.name === 'index.html');
+      if (hasIndex) document.getElementById('btnPreview').style.display = '';
+    }
+
+    function renderFileList() {
+      if (!files.length) {
+        document.getElementById('fileList').innerHTML = `<div style="padding:16px;font-size:0.82rem;color:var(--text3);text-align:center;">Tidak ada file</div>`;
+        return;
+      }
+      document.getElementById('fileList').innerHTML = files.map(f => {
+        const isLocked = f.is_locked && !isOwner;
+        return `
+          <div class="file-item ${activeFile?.id === f.id ? 'active' : ''}" onclick="${isLocked ? '' : `openFile('${f.id}')`}" title="${f.name}">
+            <i class="fa-solid fa-${getFileIcon(f.name)}" style="color:${getFileColor(f.name)}"></i>
+            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.83rem;">${escHtml(f.name)}</span>
+            ${f.is_locked ? `<i class="fa-solid fa-lock" style="color:var(--warn);font-size:0.75rem;"></i>` : ''}
+            ${isOwner ? `
+              <div style="display:flex;gap:2px;" onclick="event.stopPropagation()">
+                <button class="btn btn-icon btn-sm" style="padding:3px 6px;" onclick="editFileModal('${f.id}')"><i class="fa-solid fa-pen" style="font-size:0.7rem;"></i></button>
+                <button class="btn btn-icon btn-sm" style="padding:3px 6px;" onclick="toggleLock('${f.id}',${f.is_locked})"><i class="fa-solid fa-${f.is_locked ? 'lock-open' : 'lock'}" style="font-size:0.7rem;"></i></button>
+                <button class="btn btn-icon btn-sm" style="padding:3px 6px;color:var(--danger);" onclick="deleteFile('${f.id}')"><i class="fa-solid fa-trash" style="font-size:0.7rem;"></i></button>
+              </div>` : ''}
+          </div>`;
+      }).join('');
+    }
+
+    function getFileIcon(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      const icons = { html:'file-code', css:'file-code', js:'file-code', ts:'file-code', py:'file-code', json:'file-lines', md:'file-lines', txt:'file-lines', jpg:'file-image', jpeg:'file-image', png:'file-image', gif:'file-image', svg:'file-image', mp4:'file-video', mp3:'file-audio' };
+      return icons[ext] || 'file';
+    }
+    function getFileColor(name) {
+      const ext = name.split('.').pop().toLowerCase();
+      const colors = { html:'#e34c26', css:'#264de4', js:'#f0db4f', ts:'#3178c6', py:'#3572a5', json:'var(--accent2)', md:'var(--text2)', jpg:'var(--warn)', png:'var(--warn)', svg:'var(--accent)', gif:'var(--warn)' };
+      return colors[ext] || 'var(--text3)';
+    }
+
+    function openFile(fileId) {
+      const file = files.find(f => f.id === fileId);
+      if (!file) return;
+      if (file.is_locked && !isOwner) { toast('File ini dikunci oleh pemilik.', 'error'); return; }
+      activeFile = file;
+      if (!openTabs.find(t => t.id === fileId)) openTabs.push(file);
+      renderTabs();
+      showFileContent(file);
+      renderFileList();
+    }
+
+    function renderTabs() {
+      if (!openTabs.length) {
+        document.getElementById('viewerTabs').innerHTML = `<span style="font-size:0.8rem;color:var(--text3);padding:12px 8px;">Pilih file dari kiri</span>`;
+        return;
+      }
+      document.getElementById('viewerTabs').innerHTML = openTabs.map(f => `
+        <button class="viewer-tab ${activeFile?.id === f.id ? 'active' : ''}" onclick="openFile('${f.id}')">
+          <i class="fa-solid fa-${getFileIcon(f.name)}" style="color:${getFileColor(f.name)};font-size:0.75rem;"></i>
+          ${escHtml(f.name)}
+          <span class="close-tab" onclick="event.stopPropagation();closeTab('${f.id}')"><i class="fa-solid fa-xmark"></i></span>
+        </button>
+      `).join('');
+    }
+
+    function closeTab(fileId) {
+      openTabs = openTabs.filter(t => t.id !== fileId);
+      if (activeFile?.id === fileId) {
+        activeFile = openTabs[openTabs.length - 1] || null;
+        if (activeFile) showFileContent(activeFile); else {
+          document.getElementById('viewerContent').innerHTML = `<div class="empty-state" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;"><i class="fa-solid fa-file-code"></i><h3>Pilih file untuk melihat isinya</h3></div>`;
+        }
+      }
+      renderTabs();
+    }
+
+    function showFileContent(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      const imgExts = ['jpg','jpeg','png','gif','webp','svg','bmp'];
+      const vc = document.getElementById('viewerContent');
+
+      if (imgExts.includes(ext)) {
+        vc.innerHTML = `<div style="padding:20px;text-align:center;"><img src="${escHtml(file.content)}" style="max-width:100%;max-height:80vh;border-radius:8px;" onerror="this.parentNode.innerHTML='<p style=color:var(--text3)>Tidak dapat memuat gambar</p>'"></div>`;
+        return;
+      }
+
+      const lines = (file.content || '').split('\n');
+      const lineNums = lines.map((_, i) => i + 1).join('\n');
+      const escaped = escHtml(file.content || '');
+
+      vc.innerHTML = `
+        <div class="line-numbers">
+          <div class="line-nums-col">${lineNums}</div>
+          <div class="code-col"><pre style="font-family:var(--font-mono);font-size:0.84rem;line-height:1.75;white-space:pre-wrap;word-break:break-all;">${escaped}</pre></div>
+        </div>`;
+    }
+
+    function togglePreview() {
+      showingPreview = !showingPreview;
+      if (showingPreview) {
+        const indexFile = files.find(f => f.name === 'index.html');
+        if (!indexFile) return toast('Tidak ada index.html!', 'error');
+
+        // Build virtual preview with all files
+        let html = indexFile.content || '';
+        const vc = document.getElementById('viewerContent');
+        const iframe = document.createElement('iframe');
+        iframe.className = 'preview-frame';
+        iframe.srcdoc = html;
+        vc.innerHTML = '';
+        vc.appendChild(iframe);
+        document.getElementById('btnPreview').innerHTML = '<i class="fa-solid fa-code"></i> Kembali ke Kode';
+      } else {
+        if (activeFile) showFileContent(activeFile);
+        else document.getElementById('viewerContent').innerHTML = `<div class="empty-state" style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;"><i class="fa-solid fa-file-code"></i><h3>Pilih file</h3></div>`;
+        document.getElementById('btnPreview').innerHTML = '<i class="fa-solid fa-eye"></i> Lihat Tampilan';
+      }
+    }
+
+    function openZyvedit() {
+      if (!user) { window.location.href = 'auth.html'; return; }
+      window.location.href = `zyvedit.html?project=${projId}`;
+    }
+
+    async function addFile() {
+      const name = document.getElementById('newFileName').value.trim();
+      const content = document.getElementById('newFileContent').value;
+      const locked = document.getElementById('newFileLocked').checked;
+      if (!name) return toast('Nama file wajib!', 'error');
+      const { error } = await sb.from('files_Zyan').insert({ project_id: projId, name, content, is_locked: locked, file_type: name.split('.').pop(), size_bytes: content.length });
+      if (error) return toast('Gagal menambah file!', 'error');
+      closeModal('addFileModal');
+      toast('File ditambahkan!', 'success');
+      loadFiles();
+    }
+
+    function addFileModal() { document.getElementById('newFileName').value=''; document.getElementById('newFileContent').value=''; document.getElementById('newFileLocked').checked=false; openModal('addFileModal'); }
+
+    async function deleteFile(fileId) {
+      if (!confirm('Hapus file ini?')) return;
+      await sb.from('files_Zyan').delete().eq('id', fileId);
+      files = files.filter(f => f.id !== fileId);
+      openTabs = openTabs.filter(t => t.id !== fileId);
+      if (activeFile?.id === fileId) activeFile = null;
+      renderTabs(); renderFileList();
+      toast('File dihapus', 'info');
+    }
+
+    async function toggleLock(fileId, isLocked) {
+      await sb.from('files_Zyan').update({ is_locked: !isLocked }).eq('id', fileId);
+      const f = files.find(f => f.id === fileId);
+      if (f) f.is_locked = !isLocked;
+      renderFileList();
+      toast(isLocked ? 'File dibuka' : 'File dikunci', 'info');
+    }
+
+    function editFileModal(fileId) {
+      const f = files.find(f => f.id === fileId);
+      if (!f) return;
+      window.location.href = `zyvedit.html?project=${projId}&file=${fileId}`;
+    }
+
+    function uploadFileModal() { openModal('uploadModal'); }
+    async function uploadAsset() {
+      const files2 = document.getElementById('assetUploadInp').files;
+      if (!files2.length) return;
+      for (const file of files2) {
+        const text = await file.text().catch(() => '');
+        await sb.from('files_Zyan').insert({ project_id: projId, name: file.name, content: text, file_type: file.name.split('.').pop(), size_bytes: file.size });
+      }
+      closeModal('uploadModal');
+      toast('File diupload!', 'success');
+      loadFiles();
+    }
+
+    function openReport() {
+      if (!user) { toast('Login untuk melaporkan!', 'error'); return; }
+      openModal('reportModal');
+    }
+    async function submitReport() {
+      const reason = document.getElementById('reportReason').value.trim();
+      if (!reason) return toast('Tulis alasan laporan!', 'error');
+      await sb.from('reports_Zyan').insert({ reporter_id: user.id, target_type: 'project', target_id: projId, reason });
+      closeModal('reportModal');
+      toast('Laporan terkirim!', 'success');
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    loadProject();
+  </script>
+</body>
+</html>

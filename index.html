@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zyvenqo — Platform Kode Kolaboratif</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .home-topbar { background: rgba(10,10,15,0.95); }
+    .hero {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 80px 24px 40px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(108,99,255,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-grid {
+      position: absolute; inset: 0; opacity: 0.04;
+      background-image: linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 760px; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(108,99,255,0.12); border: 1px solid rgba(108,99,255,0.3);
+      border-radius: 20px; padding: 5px 14px; font-size: 0.78rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1px; color: var(--accent);
+      margin-bottom: 24px;
+    }
+    .hero-title {
+      font-size: clamp(2.4rem, 6vw, 4.2rem); font-weight: 800;
+      line-height: 1.1; letter-spacing: -2px; margin-bottom: 20px;
+    }
+    .hero-title span { color: var(--accent); }
+    .hero-desc {
+      font-size: 1.08rem; color: var(--text2); max-width: 560px; margin: 0 auto 36px;
+      line-height: 1.75;
+    }
+    .hero-cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .hero-cta .btn { padding: 13px 28px; font-size: 0.95rem; }
+
+    .features { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
+    .section-label {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;
+      color: var(--accent); margin-bottom: 10px;
+    }
+    .section-title { font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; }
+    .section-desc { color: var(--text2); font-size: 0.95rem; max-width: 500px; }
+
+    .feat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-top: 48px; }
+    .feat-item {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 14px;
+      padding: 24px; transition: all 0.25s;
+    }
+    .feat-item:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .feat-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: rgba(108,99,255,0.15); display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px; color: var(--accent); font-size: 1.1rem;
+    }
+    .feat-title { font-weight: 800; font-size: 1rem; margin-bottom: 8px; }
+    .feat-desc { font-size: 0.85rem; color: var(--text2); line-height: 1.7; }
+
+    .how { padding: 80px 24px; background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .how-inner { max-width: 1000px; margin: 0 auto; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0; margin-top: 48px; position: relative; }
+    .steps::before {
+      content: ''; position: absolute; top: 28px; left: 15%; right: 15%; height: 2px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      opacity: 0.25;
+    }
+    .step { text-align: center; padding: 0 20px; position: relative; }
+    .step-num {
+      width: 54px; height: 54px; border-radius: 50%;
+      background: var(--accent); color: #fff; font-weight: 800; font-size: 1.1rem;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px; position: relative; z-index: 1;
+    }
+    .step:nth-child(2) .step-num { background: var(--accent2); color: #111; }
+    .step:nth-child(3) .step-num { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
+    .step:nth-child(4) .step-num { background: var(--bg3); border: 2px solid var(--accent); color: var(--accent); }
+    .step-title { font-weight: 800; font-size: 0.95rem; margin-bottom: 8px; }
+    .step-desc { font-size: 0.82rem; color: var(--text2); line-height: 1.65; }
+
+    .cta-section {
+      padding: 80px 24px; text-align: center;
+      background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(0,212,170,0.06));
+    }
+    .cta-section .section-title { font-size: clamp(1.8rem, 4vw, 2.6rem); max-width: 600px; margin: 0 auto 16px; }
+    .cta-section .section-desc { margin: 0 auto 32px; }
+
+    footer {
+      background: var(--bg2); border-top: 1px solid var(--border);
+      padding: 32px 24px; text-align: center; font-size: 0.83rem; color: var(--text3);
+    }
+    .footer-logo { font-weight: 800; font-size: 1.1rem; color: var(--text); margin-bottom: 8px; }
+    .footer-logo span { color: var(--accent); }
+
+    @media (max-width: 600px) {
+      .steps::before { display: none; }
+      .steps { gap: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- TOPBAR -->
+  <header class="topbar home-topbar">
+    <a href="index.html" class="logo">
+      <img src="" alt="Zyvenqo" class="site-logo-img" style="display:none">
+      <span>Zyv</span><span class="logo-text" style="color:var(--text)">enqo</span>
+    </a>
+    <nav style="margin-left:auto; display:flex; align-items:center; gap:8px;">
+      <a href="index.html">Beranda</a>
+      <a href="explore.html">Jelajahi</a>
+      <a href="auth.html" class="btn btn-secondary btn-sm">Masuk</a>
+      <a href="auth.html?mode=register" class="btn btn-primary btn-sm">Daftar</a>
+      <button onclick="toggleTheme()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:1rem;padding:6px;">
+        <i class="fa-solid fa-circle-half-stroke"></i>
+      </button>
+    </nav>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <i class="fa-solid fa-code"></i> Platform Kode Kolaboratif
+      </div>
+      <h1 class="hero-title">
+        Simpan, Bagikan &<br><span>Kolaborasi</span> Kode<br>Lebih Cerdas
+      </h1>
+      <p class="hero-desc">
+        Zyvenqo adalah platform modern untuk menyimpan, mengelola, dan memperlihatkan kode-mu. Buat projek, undang kolaborator, dan tampilkan karya terbaikmu kepada dunia.
+      </p>
+      <div class="hero-cta">
+        <a href="auth.html?mode=register" class="btn btn-primary">
+          <i class="fa-solid fa-rocket"></i> Mulai Sekarang
+        </a>
+        <a href="explore.html" class="btn btn-secondary">
+          <i class="fa-solid fa-compass"></i> Jelajahi Projek
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features">
+    <div class="section-label">Fitur Unggulan</div>
+    <h2 class="section-title">Semua yang kamu butuhkan<br>dalam satu platform</h2>
+    <p class="section-desc">Dari editor kode langsung di browser hingga kolaborasi real-time, Zyvenqo menyederhanakan alur kerja pengembanganmu.</p>
+    <div class="feat-grid">
+      <div class="feat-item">
+        <div class="feat-icon"><i class="fa-solid fa-folder-tree"></i></div>
+        <div class="feat-title">Manajemen Projek</div>
+        <div class="feat-desc">Buat dan kelola projek dengan struktur file yang rapi. Dukung upload file atau pengetikan langsung.</div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+        <div class="feat-title">Zyvedit — Editor Canggih</div>
+        <div class="feat-desc">Editor kode langsung di browser dengan fitur lock file, syntax highlight, dan manajemen aset media.</div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon"><i class="fa-solid fa-eye"></i></div>
+        <div class="feat-title">Live Preview</div>
+        <div class="feat-desc">Jika projek memiliki index.html, tampilkan langsung di browser tanpa deployment tambahan.</div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon"><i class="fa-solid fa-message"></i></div>
+        <div class="feat-title">Pesan Real-Time</div>
+        <div class="feat-desc">Kirim pesan langsung ke pengguna lain, berbagi gambar, dan koneksi antar developer.</div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon"><i class="fa-solid fa-lock"></i></div>
+        <div class="feat-title">Privasi File</div>
+        <div class="feat-desc">Kunci file tertentu agar tidak bisa dilihat publik. Kontrol penuh atas konten sensitifmu.</div>
+      </div>
+      <div class="feat-item">
+        <div class="feat-icon"><i class="fa-solid fa-globe"></i></div>
+        <div class="feat-title">Chat Global</div>
+        <div class="feat-desc">Bergabung dengan komunitas developer aktif di chatroom global Zyvenqo.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how">
+    <div class="how-inner">
+      <div class="section-label" style="text-align:center">Cara Kerja</div>
+      <h2 class="section-title" style="text-align:center">Empat langkah mudah</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-title">Daftar Akun</div>
+          <div class="step-desc">Buat akun dengan username & password. Admin verifikasi dalam hitungan menit.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-title">Buat Profil</div>
+          <div class="step-desc">Lengkapi nama tampilan, foto profil, dan bio untuk memperkenalkan dirimu.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-title">Upload Kode</div>
+          <div class="step-desc">Buat projek baru, upload file atau ketik kode langsung di Zyvedit.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-title">Bagikan</div>
+          <div class="step-desc">Jadikan projek public dan biarkan dunia melihat karya terbaikmu.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="section-label">Bergabung Sekarang</div>
+    <h2 class="section-title">Siap memulai perjalanan kodemu bersama Zyvenqo?</h2>
+    <p class="section-desc">Gratis sepenuhnya. Tanpa kartu kredit. Daftar dalam 30 detik.</p>
+    <a href="auth.html?mode=register" class="btn btn-primary" style="padding:14px 36px; font-size:1rem;">
+      <i class="fa-solid fa-user-plus"></i> Buat Akun Gratis
+    </a>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo"><span>Zyv</span>enqo</div>
+    <p>Platform kode kolaboratif untuk semua developer.</p>
+    <p style="margin-top:8px;">&copy; 2025 Zyvenqo. Semua hak dilindungi.</p>
+  </footer>
+
+  <div id="toast-container"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    function toggleTheme() {
+      const curr = document.documentElement.getAttribute('data-theme');
+      applyTheme(curr === 'dark' ? 'light' : 'dark');
+    }
+    // Redirect if already logged in
+    loadSession();
+    if (currentUser && currentUser.status === 'active') {
+      // already logged in, show dashboard link in nav
+      document.querySelector('nav').innerHTML += `<a href="dashboard.html" class="btn btn-accent btn-sm">Dashboard</a>`;
+    }
+  </script>
+</body>
+</html>

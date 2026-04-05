@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Zyvenqo</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .welcome-banner {
+      background: linear-gradient(135deg, rgba(108,99,255,0.15), rgba(0,212,170,0.08));
+      border: 1px solid rgba(108,99,255,0.2); border-radius: 14px;
+      padding: 24px 28px; margin-bottom: 28px;
+      display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+    }
+    .welcome-text h2 { font-size: 1.3rem; font-weight: 800; }
+    .welcome-text p { color: var(--text2); font-size: 0.88rem; margin-top: 4px; }
+    .quick-actions { display: flex; gap: 10px; margin-left: auto; flex-wrap: wrap; }
+    
+    .activity-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-icon {
+      width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+    }
+    .activity-icon.create { background: rgba(108,99,255,0.15); color: var(--accent); }
+    .activity-icon.update { background: rgba(0,212,170,0.15); color: var(--accent2); }
+    .activity-icon.msg { background: rgba(255,165,2,0.15); color: var(--warn); }
+    .activity-body { flex: 1; min-width: 0; }
+    .activity-text { font-size: 0.87rem; }
+    .activity-time { font-size: 0.75rem; color: var(--text3); margin-top: 2px; }
+
+    .profile-card {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 14px; padding: 24px;
+      text-align: center;
+    }
+    .profile-card .avatar { margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; }
+    .profile-card .user-name { font-weight: 800; font-size: 1.1rem; }
+    .profile-card .user-handle { font-size: 0.82rem; color: var(--text3); font-family: var(--font-mono); }
+    .profile-card .user-bio { font-size: 0.85rem; color: var(--text2); margin: 10px 0; line-height: 1.6; }
+    .profile-stats { display: flex; gap: 0; border-top: 1px solid var(--border); margin-top: 16px; }
+    .p-stat { flex: 1; text-align: center; padding: 12px 6px; border-right: 1px solid var(--border); }
+    .p-stat:last-child { border-right: none; }
+    .p-stat-val { font-weight: 800; font-size: 1.1rem; font-family: var(--font-mono); }
+    .p-stat-label { font-size: 0.72rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <button class="hamburger"><i class="fa-solid fa-bars"></i></button>
+    <a href="index.html" class="logo">
+      <img src="" alt="" class="site-logo-img" style="display:none">
+      <span>Zyv</span><span style="color:var(--text)">enqo</span>
+    </a>
+    <div style="flex:1;max-width:360px;margin:0 16px;">
+      <div class="search-bar">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" placeholder="Cari projek atau pengguna..." id="globalSearch" onkeydown="if(event.key==='Enter')doSearch()">
+      </div>
+    </div>
+    <nav>
+      <a href="globalchat.html" style="position:relative;padding:8px 10px;">
+        <i class="fa-solid fa-comments"></i>
+        <span class="notif-dot" id="chatNotif" style="display:none"></span>
+      </a>
+      <a href="messages.html" style="position:relative;padding:8px 10px;">
+        <i class="fa-solid fa-envelope"></i>
+        <span class="notif-dot" id="msgNotif" style="display:none"></span>
+      </a>
+      <div class="dropdown">
+        <button data-dropdown="profileMenu" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:8px;" id="profileBtn">
+          <div id="topbarAvatar" class="avatar avatar-sm">Z</div>
+          <i class="fa-solid fa-chevron-down" style="font-size:0.7rem;color:var(--text3)"></i>
+        </button>
+        <div class="dropdown-menu" id="profileMenu">
+          <div class="dropdown-item" onclick="window.location.href='profile.html'">
+            <i class="fa-solid fa-user"></i> Profil Saya
+          </div>
+          <div class="dropdown-item" onclick="window.location.href='settings.html'">
+            <i class="fa-solid fa-gear"></i> Pengaturan
+          </div>
+          <div class="dropdown-item" onclick="toggleThemeUser()">
+            <i class="fa-solid fa-circle-half-stroke"></i> Ganti Tema
+          </div>
+          <div class="divider" style="margin:4px 0;"></div>
+          <div class="dropdown-item danger" onclick="doLogout()">
+            <i class="fa-solid fa-right-from-bracket"></i> Keluar
+          </div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">Menu</div>
+      <a href="dashboard.html" class="active"><i class="fa-solid fa-house"></i> Dashboard</a>
+      <a href="projects.html"><i class="fa-solid fa-folder"></i> Projek Saya</a>
+      <a href="explore.html"><i class="fa-solid fa-compass"></i> Jelajahi</a>
+      <a href="zyvedit.html"><i class="fa-solid fa-code"></i> Zyvedit</a>
+      <div class="sidebar-section">Sosial</div>
+      <a href="messages.html"><i class="fa-solid fa-envelope"></i> Pesan</a>
+      <a href="globalchat.html"><i class="fa-solid fa-comments"></i> Chat Global</a>
+      <div class="sidebar-section">Lainnya</div>
+      <a href="help.html"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+      <a href="settings.html"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+    </aside>
+
+    <main class="main-content">
+      <!-- WELCOME -->
+      <div class="welcome-banner">
+        <div id="welcomeAvatar"></div>
+        <div class="welcome-text">
+          <h2 id="welcomeText">Selamat datang!</h2>
+          <p>Apa yang ingin kamu buat hari ini?</p>
+        </div>
+        <div class="quick-actions">
+          <a href="projects.html?new=1" class="btn btn-primary btn-sm">
+            <i class="fa-solid fa-plus"></i> Projek Baru
+          </a>
+          <a href="explore.html" class="btn btn-secondary btn-sm">
+            <i class="fa-solid fa-compass"></i> Jelajahi
+          </a>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 300px;gap:24px;">
+        <div>
+          <!-- STATS -->
+          <div class="grid-3" style="margin-bottom:24px;" id="statsGrid">
+            <div class="stat-card">
+              <div class="stat-value" id="statProjects">0</div>
+              <div class="stat-label">Projek</div>
+            </div>
+            <div class="stat-card" style="--accent:var(--accent2)">
+              <div class="stat-value" id="statFiles">0</div>
+              <div class="stat-label">File</div>
+            </div>
+            <div class="stat-card" style="--accent:var(--warn)">
+              <div class="stat-value" id="statMessages">0</div>
+              <div class="stat-label">Pesan</div>
+            </div>
+          </div>
+
+          <!-- RECENT PROJECTS -->
+          <div class="card" style="margin-bottom:20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+              <div class="card-title">Projek Terbaru</div>
+              <a href="projects.html" class="btn btn-secondary btn-sm">Semua Projek</a>
+            </div>
+            <div id="recentProjects">
+              <div class="empty-state"><i class="fa-solid fa-folder-open"></i><h3>Belum ada projek</h3><p>Buat projek pertamamu sekarang!</p></div>
+            </div>
+          </div>
+
+          <!-- ACTIVITY -->
+          <div class="card">
+            <div class="card-title" style="margin-bottom:16px;">Aktivitas Terbaru</div>
+            <div id="activityFeed">
+              <div class="empty-state" style="padding:30px 0;"><i class="fa-solid fa-chart-line"></i><h3>Belum ada aktivitas</h3></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIDEBAR RIGHT -->
+        <div>
+          <div class="profile-card" style="margin-bottom:20px;">
+            <div id="profileCardAvatar"></div>
+            <div class="user-name" id="pcName"></div>
+            <div class="user-handle" id="pcHandle"></div>
+            <div class="user-bio" id="pcBio"></div>
+            <a href="profile.html" class="btn btn-secondary btn-sm" style="width:100%;justify-content:center;margin-top:4px;">
+              <i class="fa-solid fa-pen"></i> Edit Profil
+            </a>
+            <div class="profile-stats">
+              <div class="p-stat">
+                <div class="p-stat-val" id="pcProjects">0</div>
+                <div class="p-stat-label">Projek</div>
+              </div>
+              <div class="p-stat">
+                <div class="p-stat-val" id="pcPublic">0</div>
+                <div class="p-stat-label">Publik</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ONLINE USERS -->
+          <div class="card">
+            <div class="card-title" style="margin-bottom:14px;">Pengguna Aktif</div>
+            <div id="onlineUsers"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    const user = requireAuth();
+    if (!user) throw new Error('not auth');
+
+    async function initDashboard() {
+      // Welcome
+      document.getElementById('welcomeText').textContent = `Halo, ${user.display_name || user.username}!`;
+      
+      // Topbar avatar
+      document.getElementById('topbarAvatar').outerHTML = avatarHTML(user, 'sm');
+      
+      // Profile card
+      const pca = document.getElementById('profileCardAvatar');
+      pca.outerHTML = avatarHTML(user, 'lg');
+      document.getElementById('pcName').textContent = user.display_name || user.username;
+      document.getElementById('pcHandle').textContent = '@' + user.username;
+      document.getElementById('pcBio').textContent = user.bio || 'Belum ada bio.';
+
+      // Welcome avatar
+      const wa = document.getElementById('welcomeAvatar');
+      wa.outerHTML = avatarHTML(user, 'md');
+
+      // Fetch stats
+      const [{ count: projCount }, { count: fileCount }, { count: msgCount }] = await Promise.all([
+        sb.from('projects_Zyan').select('*', { count: 'exact', head: true }).eq('owner_id', user.id),
+        sb.from('files_Zyan').select('f.id', { count: 'exact', head: true })
+          .innerJoin('projects_Zyan as p', 'p.id', 'files_Zyan.project_id')
+          .eq('p.owner_id', user.id),
+        sb.from('messages_Zyan').select('*', { count: 'exact', head: true })
+          .eq('receiver_id', user.id).eq('is_read', false)
+      ]);
+
+      document.getElementById('statProjects').textContent = projCount || 0;
+      document.getElementById('statFiles').textContent = fileCount || 0;
+      document.getElementById('statMessages').textContent = msgCount || 0;
+      document.getElementById('pcProjects').textContent = projCount || 0;
+
+      // Recent projects
+      const { data: projects } = await sb.from('projects_Zyan')
+        .select('*').eq('owner_id', user.id)
+        .order('updated_at', { ascending: false }).limit(4);
+
+      if (projects?.length) {
+        const pubCount = projects.filter(p => p.visibility === 'public').length;
+        document.getElementById('pcPublic').textContent = pubCount;
+        document.getElementById('recentProjects').innerHTML = projects.map(p => `
+          <a class="project-card" href="project.html?id=${p.id}" style="margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div style="flex:1">
+                <div class="project-name">${escHtml(p.name)}</div>
+                <div class="project-desc">${escHtml(p.description || 'Tidak ada deskripsi')}</div>
+              </div>
+              <span class="badge ${p.visibility === 'public' ? 'badge-success' : 'badge-neutral'}">
+                <i class="fa-solid fa-${p.visibility === 'public' ? 'globe' : 'lock'}"></i>
+                ${p.visibility === 'public' ? 'Publik' : 'Privat'}
+              </span>
+            </div>
+            <div class="project-meta">
+              <span><i class="fa-regular fa-clock"></i> ${timeAgo(p.updated_at)}</span>
+            </div>
+          </a>
+        `).join('');
+      }
+
+      // Online users
+      const fiveMinAgo = new Date(Date.now() - 5 * 60000).toISOString();
+      const { data: onlineUsers } = await sb.from('users_Zyan')
+        .select('*').neq('id', user.id).eq('status', 'active')
+        .gte('last_seen', fiveMinAgo).limit(8);
+
+      if (onlineUsers?.length) {
+        document.getElementById('onlineUsers').innerHTML = onlineUsers.map(u => `
+          <div class="user-item" onclick="window.location.href='messages.html?to=${u.id}'">
+            <div style="position:relative;">
+              ${avatarHTML(u, 'sm')}
+              <div style="position:absolute;bottom:0;right:0;width:8px;height:8px;background:var(--success);border-radius:50%;border:2px solid var(--bg2);"></div>
+            </div>
+            <div class="user-info">
+              <div class="user-name">${escHtml(u.display_name || u.username)}</div>
+              <div class="user-sub">@${escHtml(u.username)}</div>
+            </div>
+            <i class="fa-solid fa-message" style="color:var(--text3);font-size:0.8rem;"></i>
+          </div>
+        `).join('');
+      } else {
+        document.getElementById('onlineUsers').innerHTML = '<p style="font-size:0.82rem;color:var(--text3);padding:8px 0;">Tidak ada pengguna aktif</p>';
+      }
+
+      // Unread message notif
+      if (msgCount > 0) document.getElementById('msgNotif').style.display = '';
+    }
+
+    function escHtml(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function doSearch() {
+      const q = document.getElementById('globalSearch').value.trim();
+      if (q) window.location.href = `explore.html?q=${encodeURIComponent(q)}`;
+    }
+
+    function toggleThemeUser() {
+      const curr = document.documentElement.getAttribute('data-theme');
+      applyTheme(curr === 'dark' ? 'light' : 'dark');
+    }
+
+    function doLogout() {
+      if (confirm('Yakin ingin keluar?')) { clearSession(); window.location.href = 'index.html'; }
+    }
+
+    // Update last_seen
+    sb.from('users_Zyan').update({ last_seen: new Date().toISOString() }).eq('id', user.id);
+    initDashboard();
+  </script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zyvenqo — Masuk / Daftar</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    body { background: var(--bg); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    .auth-wrap {
+      width: 100%; max-width: 440px;
+    }
+    .auth-logo {
+      text-align: center; margin-bottom: 32px;
+    }
+    .auth-logo a { font-size: 1.8rem; font-weight: 800; letter-spacing: -1px; color: var(--text); text-decoration: none; }
+    .auth-logo a span { color: var(--accent); }
+    .auth-logo p { color: var(--text2); font-size: 0.85rem; margin-top: 4px; }
+    .auth-box {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 32px;
+    }
+    .auth-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 24px; }
+    .auth-tab {
+      flex: 1; padding: 10px; text-align: center; font-weight: 700; font-size: 0.9rem;
+      cursor: pointer; border-bottom: 2px solid transparent; color: var(--text2);
+      transition: all 0.15s; background: none; border-left: none; border-right: none; border-top: none;
+      font-family: var(--font-main);
+    }
+    .auth-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* PENDING STATE */
+    .pending-box { text-align: center; padding: 20px 0; }
+    .pending-icon {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: rgba(255,165,2,0.12); color: var(--warn);
+      font-size: 2rem; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px; border: 2px solid rgba(255,165,2,0.3);
+      transition: all 0.5s;
+    }
+    .pending-icon.confirmed { background: rgba(46,213,115,0.12); color: var(--success); border-color: rgba(46,213,115,0.3); }
+    .pulse { animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.05);opacity:0.8} }
+    .pending-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 8px; }
+    .pending-desc { font-size: 0.85rem; color: var(--text2); line-height: 1.7; margin-bottom: 20px; }
+    .status-tag {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 7px 16px; border-radius: 20px; font-size: 0.82rem; font-weight: 700;
+      border: 1px solid; margin-bottom: 24px;
+    }
+    .status-tag.pending { background: rgba(255,165,2,0.1); color: var(--warn); border-color: rgba(255,165,2,0.3); }
+    .status-tag.confirmed { background: rgba(46,213,115,0.1); color: var(--success); border-color: rgba(46,213,115,0.3); }
+
+    /* PROFILE SETUP */
+    .avatar-upload {
+      display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 20px;
+    }
+    .avatar-preview {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: var(--bg3); border: 2px dashed var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: border-color 0.2s; overflow: hidden;
+      position: relative;
+    }
+    .avatar-preview:hover { border-color: var(--accent); }
+    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .avatar-preview i { font-size: 1.5rem; color: var(--text3); }
+    #avatarInput { display: none; }
+  </style>
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-logo">
+      <a href="index.html"><span>Zyv</span>enqo</a>
+      <p>Platform Kode Kolaboratif</p>
+    </div>
+
+    <!-- AUTH BOX -->
+    <div class="auth-box" id="authBox">
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tabLogin" onclick="switchTab('login')">
+          <i class="fa-solid fa-right-to-bracket"></i> Masuk
+        </button>
+        <button class="auth-tab" id="tabRegister" onclick="switchTab('register')">
+          <i class="fa-solid fa-user-plus"></i> Daftar
+        </button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="loginForm">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-input" id="loginUsername" placeholder="Masukkan username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div style="position:relative;">
+            <input type="password" class="form-input" id="loginPassword" placeholder="Masukkan password" style="padding-right:44px">
+            <button type="button" onclick="togglePw('loginPassword', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.9rem;">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;" id="loginBtn" onclick="doLogin()">
+          <i class="fa-solid fa-right-to-bracket"></i> Masuk
+        </button>
+        <p style="text-align:center;margin-top:14px;font-size:0.82rem;color:var(--text2);">
+          Belum punya akun? <a href="#" onclick="switchTab('register')">Daftar sekarang</a>
+        </p>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div id="registerForm" style="display:none;">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-input" id="regUsername" placeholder="Pilih username unik" oninput="this.value=this.value.replace(/\s/g,'')">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div style="position:relative;">
+            <input type="password" class="form-input" id="regPassword" placeholder="Min. 6 karakter" style="padding-right:44px">
+            <button type="button" onclick="togglePw('regPassword', this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:0.9rem;">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Konfirmasi Password</label>
+          <input type="password" class="form-input" id="regConfirm" placeholder="Ulangi password">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Captcha: <span id="captchaQuestion" style="color:var(--accent);font-family:var(--font-mono);"></span></label>
+          <input type="number" class="form-input" id="captchaInput" placeholder="Jawaban">
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;" id="regBtn" onclick="doRegister()">
+          <i class="fa-solid fa-paper-plane"></i> Konfirmasi Pembuatan Akun
+        </button>
+        <p style="text-align:center;margin-top:14px;font-size:0.82rem;color:var(--text2);">
+          Sudah punya akun? <a href="#" onclick="switchTab('login')">Masuk</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- PENDING BOX -->
+    <div class="auth-box" id="pendingBox" style="display:none;">
+      <div class="pending-box">
+        <div class="pending-icon pulse" id="pendingIcon">
+          <i class="fa-solid fa-clock" id="pendingIconInner"></i>
+        </div>
+        <div class="pending-title">Akun Sedang Dikonfirmasi</div>
+        <div class="pending-desc">
+          Akun sedang dikonfirmasi oleh admin demi mencegah akun bodong atau akun bot untuk masuk. Penerimaan akan dikonfirmasi secepat-cepatnya dalam kurun waktu 1 menit, selama-lamanya dalam kurun waktu 20 menit. Mohon bersabar.
+        </div>
+        <div class="status-tag pending" id="statusTag">
+          <i class="fa-solid fa-spinner fa-spin" id="statusIcon"></i>
+          <span id="statusText">Akun Sedang Di Konfirmasi Admin</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
+          <button class="btn btn-primary" id="continueBtn" onclick="goToSetupProfile()" style="display:none;width:100%;justify-content:center;">
+            <i class="fa-solid fa-arrow-right"></i> Lanjutkan
+          </button>
+          <button class="btn btn-secondary" id="backBtn" onclick="confirmGoBack()" style="width:100%;justify-content:center;">
+            <i class="fa-solid fa-house"></i> Kembali ke Homepage
+          </button>
+          <p style="font-size:0.75rem;color:var(--danger);">
+            <i class="fa-solid fa-triangle-exclamation"></i> Jika kembali sekarang, proses konfirmasi tetap berjalan namun akun perlu dikonfirmasi ulang saat login.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE SETUP BOX -->
+    <div class="auth-box" id="profileBox" style="display:none;">
+      <h3 style="font-weight:800;margin-bottom:6px;">Lengkapi Profil</h3>
+      <p style="font-size:0.83rem;color:var(--text2);margin-bottom:24px;">Sebentar lagi! Lengkapi profil untuk mulai menggunakan Zyvenqo.</p>
+      
+      <div class="avatar-upload">
+        <div class="avatar-preview" onclick="document.getElementById('avatarInput').click()">
+          <i class="fa-solid fa-camera" id="avatarPlaceholder"></i>
+          <img id="avatarPreviewImg" src="" alt="" style="display:none;">
+        </div>
+        <span style="font-size:0.8rem;color:var(--text3);">Klik untuk upload foto profil</span>
+        <input type="file" id="avatarInput" accept="image/*" onchange="previewAvatar(this)">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Nama Tampilan</label>
+        <input type="text" class="form-input" id="setupName" placeholder="Nama yang ditampilkan">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bio</label>
+        <textarea class="form-input" id="setupBio" placeholder="Ceritakan sedikit tentang dirimu..." rows="3"></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="saveProfile()">
+        <i class="fa-solid fa-check"></i> Simpan & Mulai
+      </button>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    let pendingUserId = null;
+    let pollInterval = null;
+    let avatarFile = null;
+
+    // URL params
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'register') switchTab('register');
+
+    // Check already logged in
+    loadSession();
+    if (currentUser && currentUser.status === 'active') window.location.href = 'dashboard.html';
+
+    function switchTab(tab) {
+      document.getElementById('loginForm').style.display = tab === 'login' ? '' : 'none';
+      document.getElementById('registerForm').style.display = tab === 'register' ? '' : 'none';
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+      if (tab === 'register') generateCaptcha('captchaQuestion');
+    }
+
+    function togglePw(id, btn) {
+      const inp = document.getElementById(id);
+      const show = inp.type === 'password';
+      inp.type = show ? 'text' : 'password';
+      btn.querySelector('i').className = show ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye';
+    }
+
+    async function doLogin() {
+      const username = document.getElementById('loginUsername').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!username || !password) return toast('Isi semua kolom!', 'error');
+      
+      const btn = document.getElementById('loginBtn');
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+
+      try {
+        const hash = await hashPassword(password);
+        const { data, error } = await sb.from('users_Zyan').select('*').eq('username', username).single();
+        if (error || !data) { toast('Username tidak ditemukan!', 'error'); return; }
+        if (data.password_hash !== hash && data.password_hash !== password) { toast('Password salah!', 'error'); return; }
+        if (data.status === 'pending') { toast('Akun belum dikonfirmasi admin!', 'error'); return; }
+        if (data.status === 'banned') { toast('Akun kamu telah diblokir!', 'error'); return; }
+        
+        // Update last seen
+        await sb.from('users_Zyan').update({ last_seen: new Date().toISOString() }).eq('id', data.id);
+        saveSession(data);
+        
+        if (data.role === 'admin') { window.location.href = 'admin.html'; return; }
+        if (!data.display_name) {
+          pendingUserId = data.id;
+          document.getElementById('authBox').style.display = 'none';
+          document.getElementById('profileBox').style.display = '';
+          return;
+        }
+        window.location.href = 'dashboard.html';
+      } catch(e) {
+        toast('Terjadi kesalahan: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Masuk';
+      }
+    }
+
+    async function doRegister() {
+      const username = document.getElementById('regUsername').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const confirm = document.getElementById('regConfirm').value;
+      const captcha = parseInt(document.getElementById('captchaInput').value);
+
+      if (!username || !password || !confirm) return toast('Isi semua kolom!', 'error');
+      if (username.length < 3) return toast('Username minimal 3 karakter!', 'error');
+      if (password.length < 6) return toast('Password minimal 6 karakter!', 'error');
+      if (password !== confirm) return toast('Password tidak cocok!', 'error');
+      if (captcha !== captchaAnswer) return toast('Jawaban captcha salah!', 'error');
+
+      const btn = document.getElementById('regBtn');
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Mendaftarkan...';
+
+      try {
+        // Check username taken
+        const { data: existing } = await sb.from('users_Zyan').select('id').eq('username', username).single();
+        if (existing) { toast('Username sudah digunakan!', 'error'); return; }
+
+        const hash = await hashPassword(password);
+        const { data, error } = await sb.from('users_Zyan').insert({
+          username, password_hash: hash, status: 'pending', role: 'user'
+        }).select().single();
+
+        if (error) { toast('Gagal mendaftar: ' + error.message, 'error'); return; }
+        
+        pendingUserId = data.id;
+        document.getElementById('authBox').style.display = 'none';
+        document.getElementById('pendingBox').style.display = '';
+        startPolling();
+      } catch(e) {
+        toast('Terjadi kesalahan: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Konfirmasi Pembuatan Akun';
+      }
+    }
+
+    function startPolling() {
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(async () => {
+        if (!pendingUserId) return;
+        const { data } = await sb.from('users_Zyan').select('status').eq('id', pendingUserId).single();
+        if (data?.status === 'active') {
+          clearInterval(pollInterval);
+          showConfirmed();
+        }
+      }, 5000);
+    }
+
+    function showConfirmed() {
+      const icon = document.getElementById('pendingIcon');
+      const iconInner = document.getElementById('pendingIconInner');
+      const tag = document.getElementById('statusTag');
+      const statusIcon = document.getElementById('statusIcon');
+      const statusText = document.getElementById('statusText');
+      const continueBtn = document.getElementById('continueBtn');
+
+      icon.classList.remove('pulse');
+      icon.classList.add('confirmed');
+      iconInner.className = 'fa-solid fa-circle-check';
+      tag.className = 'status-tag confirmed';
+      statusIcon.className = 'fa-solid fa-circle-check';
+      statusText.textContent = 'Akun Telah Dikonfirmasi';
+      continueBtn.style.display = '';
+      toast('Akun dikonfirmasi! Klik Lanjutkan.', 'success');
+    }
+
+    async function goToSetupProfile() {
+      const { data } = await sb.from('users_Zyan').select('*').eq('id', pendingUserId).single();
+      if (data) { saveSession(data); }
+      document.getElementById('pendingBox').style.display = 'none';
+      document.getElementById('profileBox').style.display = '';
+    }
+
+    function confirmGoBack() {
+      if (confirm('Jika kembali sekarang, akun belum bisa digunakan. Yakin ingin kembali?')) {
+        window.location.href = 'index.html';
+      }
+    }
+
+    function previewAvatar(input) {
+      if (input.files && input.files[0]) {
+        avatarFile = input.files[0];
+        const reader = new FileReader();
+        reader.onload = e => {
+          document.getElementById('avatarPreviewImg').src = e.target.result;
+          document.getElementById('avatarPreviewImg').style.display = '';
+          document.getElementById('avatarPlaceholder').style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    async function saveProfile() {
+      if (!currentUser && !pendingUserId) return;
+      const uid = currentUser?.id || pendingUserId;
+      const name = document.getElementById('setupName').value.trim();
+      const bio = document.getElementById('setupBio').value.trim();
+      if (!name) return toast('Nama tampilan wajib diisi!', 'error');
+
+      let avatarUrl = '';
+      if (avatarFile) {
+        const ext = avatarFile.name.split('.').pop();
+        const path = `avatars/${uid}.${ext}`;
+        const { error: upErr } = await sb.storage.from('zyvenqo').upload(path, avatarFile, { upsert: true });
+        if (!upErr) {
+          const { data: urlData } = sb.storage.from('zyvenqo').getPublicUrl(path);
+          avatarUrl = urlData.publicUrl;
+        }
+      }
+
+      const updateData = { display_name: name, bio };
+      if (avatarUrl) updateData.avatar_url = avatarUrl;
+
+      const { data, error } = await sb.from('users_Zyan').update(updateData).eq('id', uid).select().single();
+      if (error) { toast('Gagal menyimpan profil!', 'error'); return; }
+      
+      saveSession(data);
+      toast('Profil tersimpan!', 'success');
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 1200);
+    }
+
+    // Enter key on login
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        if (document.getElementById('loginForm').style.display !== 'none') doLogin();
+      }
+    });
+
+    // Init captcha
+    generateCaptcha('captchaQuestion');
+  </script>
+</body>
+</html>

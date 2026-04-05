@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Zyvenqo</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    /* ---- ADMIN-SPECIFIC OVERRIDES ---- */
+    .sidebar a.active { color: var(--warn); background: rgba(255,165,2,0.08); border-left-color: var(--warn); }
+    .admin-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(255,165,2,0.15); color: var(--warn);
+      border: 1px solid rgba(255,165,2,0.3); border-radius: 20px;
+      font-size: 0.7rem; font-weight: 800; padding: 2px 10px;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    /* ---- OVERVIEW STATS ---- */
+    .stat-card.warn::before  { background: var(--warn); }
+    .stat-card.danger::before { background: var(--danger); }
+    .stat-card.success::before { background: var(--success); }
+    .stat-card.accent2::before { background: var(--accent2); }
+    .stat-trend {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 0.75rem; margin-top: 6px; font-weight: 700;
+    }
+    .stat-trend.up { color: var(--success); }
+    .stat-trend.down { color: var(--danger); }
+
+    /* ---- PENDING ACCOUNTS HIGHLIGHT ---- */
+    .pending-row { background: rgba(255,165,2,0.04) !important; }
+    .pending-row:hover td { background: rgba(255,165,2,0.08) !important; }
+
+    /* ---- ACTIVITY LOG ---- */
+    .log-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .log-item:last-child { border-bottom: none; }
+    .log-icon {
+      width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 0.78rem;
+    }
+    .log-text { font-size: 0.84rem; line-height: 1.5; }
+    .log-time { font-size: 0.73rem; color: var(--text3); margin-top: 2px; }
+
+    /* ---- UPLOAD LOGO ---- */
+    .logo-upload-zone {
+      border: 2px dashed var(--border); border-radius: 12px;
+      padding: 28px; text-align: center; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .logo-upload-zone:hover { border-color: var(--accent); background: rgba(108,99,255,0.04); }
+    .logo-preview { width: 80px; height: 80px; object-fit: contain; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--border); }
+
+    /* ---- REPORT CARD ---- */
+    .report-item {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; margin-bottom: 12px; transition: border-color 0.2s;
+    }
+    .report-item:hover { border-color: var(--danger); }
+    .report-target { font-size: 0.8rem; color: var(--text3); font-family: var(--font-mono); }
+    .report-reason { font-size: 0.9rem; margin: 8px 0; }
+    .report-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+    /* ---- HELP MESSAGES ---- */
+    .help-item {
+      background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; margin-bottom: 12px; transition: border-color 0.2s;
+    }
+    .help-item.unread { border-left: 3px solid var(--accent); }
+    .help-subject { font-weight: 800; font-size: 0.95rem; }
+    .help-content { font-size: 0.85rem; color: var(--text2); margin-top: 6px; line-height: 1.6; }
+    .help-meta { font-size: 0.75rem; color: var(--text3); margin-top: 8px; display: flex; gap: 12px; flex-wrap: wrap; }
+
+    /* ---- INLINE PROJECT VIEW ---- */
+    .project-row-expand { background: var(--bg3); padding: 12px 16px; font-size: 0.83rem; color: var(--text2); }
+
+    /* ---- SECTION HEADER ---- */
+    .section-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 18px; flex-wrap: wrap; gap: 10px;
+    }
+    .section-hdr h3 { font-size: 1.05rem; font-weight: 800; }
+
+    /* ---- ONLINE DOT ---- */
+    .online-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; display: inline-block; }
+
+    /* ---- RESPONSIVE GRID ---- */
+    @media (max-width: 900px) {
+      .admin-grid-4 { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+    @media (max-width: 600px) {
+      .admin-grid-4 { grid-template-columns: 1fr !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <button class="hamburger"><i class="fa-solid fa-bars"></i></button>
+  <a href="index.html" class="logo">
+    <img src="" alt="Zyvenqo" class="site-logo-img" style="display:none">
+    <span>Zyv</span><span style="color:var(--text)">enqo</span>
+  </a>
+  <span class="admin-badge" style="margin-left:10px;"><i class="fa-solid fa-shield-halved"></i> Admin Panel</span>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px;">
+    <button onclick="toggleAdminTheme()" style="background:none;border:none;cursor:pointer;color:var(--text2);font-size:1rem;padding:6px 10px;"><i class="fa-solid fa-circle-half-stroke"></i></button>
+    <div class="dropdown">
+      <button data-dropdown="adminProfileMenu" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:8px;">
+        <div class="avatar avatar-sm" id="adminAvatar">A</div>
+        <i class="fa-solid fa-chevron-down" style="font-size:0.7rem;color:var(--text3)"></i>
+      </button>
+      <div class="dropdown-menu" id="adminProfileMenu">
+        <div class="dropdown-item" onclick="window.location.href='dashboard.html'"><i class="fa-solid fa-house"></i> Beranda User</div>
+        <div class="divider" style="margin:4px 0;height:1px;background:var(--border);"></div>
+        <div class="dropdown-item danger" onclick="doAdminLogout()"><i class="fa-solid fa-right-from-bracket"></i> Keluar</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">Overview</div>
+    <a href="#" class="active" onclick="showTab('overview');return false;"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+
+    <div class="sidebar-section">Pengguna</div>
+    <a href="#" onclick="showTab('pending');return false;" id="sidebarPending"><i class="fa-solid fa-user-clock"></i> Konfirmasi Akun <span id="pendingBadge" class="badge badge-warn" style="font-size:0.68rem;padding:1px 7px;"></span></a>
+    <a href="#" onclick="showTab('users');return false;"><i class="fa-solid fa-users"></i> Semua Pengguna</a>
+
+    <div class="sidebar-section">Konten</div>
+    <a href="#" onclick="showTab('projects');return false;"><i class="fa-solid fa-folder"></i> Projek</a>
+    <a href="#" onclick="showTab('reports');return false;" id="sidebarReports"><i class="fa-solid fa-flag"></i> Laporan <span id="reportBadge" class="badge badge-danger" style="font-size:0.68rem;padding:1px 7px;"></span></a>
+
+    <div class="sidebar-section">Komunikasi</div>
+    <a href="#" onclick="showTab('messages');return false;"><i class="fa-solid fa-envelope"></i> Pesan Admin</a>
+    <a href="#" onclick="showTab('globalchat');return false;"><i class="fa-solid fa-comments"></i> Chat Global</a>
+
+    <div class="sidebar-section">Pengaturan</div>
+    <a href="#" onclick="showTab('settings');return false;"><i class="fa-solid fa-sliders"></i> Pengaturan Situs</a>
+    <a href="#" onclick="showTab('logs');return false;"><i class="fa-solid fa-list-check"></i> Log Aktivitas</a>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- ===================== OVERVIEW ===================== -->
+    <div id="tab-overview">
+      <div class="page-header">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div>
+            <div class="page-title">Dashboard Admin</div>
+            <div class="page-sub">Selamat datang kembali, <strong id="adminName">Administrator</strong></div>
+          </div>
+          <div style="margin-left:auto;" id="liveTime" style="font-family:var(--font-mono);font-size:0.82rem;color:var(--text3);"></div>
+        </div>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="grid-4 admin-grid-4" style="margin-bottom:24px;">
+        <div class="stat-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="stat-label">Total Pengguna</div>
+            <i class="fa-solid fa-users" style="color:var(--accent);opacity:0.6;font-size:1.1rem;"></i>
+          </div>
+          <div class="stat-value" id="statTotalUsers">—</div>
+          <div class="stat-trend up"><i class="fa-solid fa-arrow-trend-up"></i> <span id="statActiveUsers">0</span> aktif</div>
+        </div>
+        <div class="stat-card warn">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="stat-label">Menunggu Konfirmasi</div>
+            <i class="fa-solid fa-user-clock" style="color:var(--warn);opacity:0.6;font-size:1.1rem;"></i>
+          </div>
+          <div class="stat-value" id="statPending">—</div>
+          <div class="stat-trend" style="color:var(--warn);"><i class="fa-solid fa-circle-exclamation"></i> Perlu tindakan</div>
+        </div>
+        <div class="stat-card success">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="stat-label">Total Projek</div>
+            <i class="fa-solid fa-folder" style="color:var(--success);opacity:0.6;font-size:1.1rem;"></i>
+          </div>
+          <div class="stat-value" id="statTotalProjects">—</div>
+          <div class="stat-trend up"><i class="fa-solid fa-globe"></i> <span id="statPublicProjects">0</span> publik</div>
+        </div>
+        <div class="stat-card danger">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div class="stat-label">Laporan Masuk</div>
+            <i class="fa-solid fa-flag" style="color:var(--danger);opacity:0.6;font-size:1.1rem;"></i>
+          </div>
+          <div class="stat-value" id="statReports">—</div>
+          <div class="stat-trend down"><i class="fa-solid fa-circle-dot"></i> <span id="statOpenReports">0</span> belum ditangani</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:20px;flex-wrap:wrap;" id="overviewGrid">
+        <!-- RECENT USERS -->
+        <div>
+          <div class="card" style="margin-bottom:20px;">
+            <div class="section-hdr">
+              <h3><i class="fa-solid fa-user-plus" style="color:var(--accent);margin-right:8px;"></i>Pendaftaran Terbaru</h3>
+              <button class="btn btn-secondary btn-sm" onclick="showTab('users')">Lihat Semua</button>
+            </div>
+            <div id="recentUsersTable">
+              <div style="text-align:center;padding:30px 0;"><div class="spinner" style="margin:0 auto;"></div></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="section-hdr">
+              <h3><i class="fa-solid fa-folder-open" style="color:var(--accent2);margin-right:8px;"></i>Projek Terbaru</h3>
+              <button class="btn btn-secondary btn-sm" onclick="showTab('projects')">Lihat Semua</button>
+            </div>
+            <div id="recentProjectsTable">
+              <div style="text-align:center;padding:30px 0;"><div class="spinner" style="margin:0 auto;"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div>
+          <!-- PENDING QUICK ACTION -->
+          <div class="card" style="margin-bottom:16px;border-color:rgba(255,165,2,0.3);">
+            <div class="section-hdr">
+              <h3 style="color:var(--warn);"><i class="fa-solid fa-user-clock" style="margin-right:8px;"></i>Konfirmasi Cepat</h3>
+            </div>
+            <div id="quickPendingList">
+              <div style="text-align:center;padding:20px 0;"><div class="spinner" style="margin:0 auto;"></div></div>
+            </div>
+          </div>
+
+          <!-- REPORTS QUICK -->
+          <div class="card" style="margin-bottom:16px;border-color:rgba(255,71,87,0.25);">
+            <div class="section-hdr">
+              <h3 style="color:var(--danger);"><i class="fa-solid fa-flag" style="margin-right:8px;"></i>Laporan Terbaru</h3>
+              <button class="btn btn-secondary btn-sm" onclick="showTab('reports')">Semua</button>
+            </div>
+            <div id="quickReportsList">
+              <div style="text-align:center;padding:20px 0;"><div class="spinner" style="margin:0 auto;"></div></div>
+            </div>
+          </div>
+
+          <!-- ONLINE USERS -->
+          <div class="card">
+            <div class="section-hdr">
+              <h3><i class="fa-solid fa-circle" style="color:var(--success);font-size:0.6rem;margin-right:8px;"></i>Pengguna Online</h3>
+              <span id="onlineBadge" class="badge badge-success">0</span>
+            </div>
+            <div id="onlineUsersList"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== PENDING ACCOUNTS ===================== -->
+    <div id="tab-pending" style="display:none;">
+      <div class="page-header">
+        <div class="page-title">Konfirmasi Akun Baru</div>
+        <div class="page-sub">Akun yang menunggu persetujuan admin sebelum bisa digunakan.</div>
+      </div>
+      <div class="card">
+        <div class="section-hdr">
+          <h3>Daftar Menunggu</h3>
+          <button class="btn btn-secondary btn-sm" onclick="loadPendingAccounts()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        </div>
+        <div id="pendingTable">
+          <div style="text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== ALL USERS ===================== -->
+    <div id="tab-users" style="display:none;">
+      <div class="page-header">
+        <div class="page-title">Manajemen Pengguna</div>
+        <div class="page-sub">Kelola semua akun yang terdaftar di Zyvenqo.</div>
+      </div>
+      <div class="card">
+        <div class="section-hdr">
+          <div class="search-bar" style="max-width:320px;flex:1;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Cari username..." id="userSearchInput" oninput="filterUsers()">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <select class="form-input btn-sm" id="userStatusFilter" onchange="filterUsers()" style="width:130px;padding:6px 10px;">
+              <option value="">Semua Status</option>
+              <option value="active">Aktif</option>
+              <option value="pending">Pending</option>
+              <option value="banned">Banned</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" onclick="loadAllUsers()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="usersTable">
+            <thead><tr>
+              <th>Pengguna</th>
+              <th>Username</th>
+              <th>Status</th>
+              <th>Role</th>
+              <th>Bergabung</th>
+              <th>Terakhir Aktif</th>
+              <th>Tindakan</th>
+            </tr></thead>
+            <tbody id="usersTableBody">
+              <tr><td colspan="7" style="text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== PROJECTS ===================== -->
+    <div id="tab-projects" style="display:none;">
+      <div class="page-header">
+        <div class="page-title">Manajemen Projek</div>
+        <div class="page-sub">Lihat dan kelola semua projek pengguna.</div>
+      </div>
+      <div class="card">
+        <div class="section-hdr">
+          <div class="search-bar" style="max-width:320px;flex:1;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" placeholder="Cari projek..." id="projSearchInput" oninput="filterProjects()">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <select class="form-input btn-sm" id="projVisFilter" onchange="filterProjects()" style="width:130px;padding:6px 10px;">
+              <option value="">Semua Visibilitas</option>
+              <option value="public">Publik</option>
+              <option value="private">Privat</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" onclick="loadAllProjects()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead><tr>
+              <th>Nama Projek</th>
+              <th>Pemilik</th>
+              <th>Visibilitas</th>
+              <th>Dibuat</th>
+              <th>Diupdate</th>
+              <th>Tindakan</th>
+            </tr></thead>
+            <tbody id="projectsTableBody">
+              <tr><td colspan="6" style="text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== REPORTS ===================== -->
+    <div id="tab-reports" style="display:none;">
+      <div class="page-header">
+        <div class="page-title">Laporan Pengguna</div>
+        <div class="page-sub">Laporan yang dikirim oleh pengguna terkait konten atau akun bermasalah.</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="loadReports('open')" id="btnReportOpen">Belum Ditangani</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadReports('resolved')" id="btnReportResolved">Sudah Ditangani</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadReports('')" id="btnReportAll">Semua</button>
+        <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="loadReports(currentReportFilter)"><i class="fa-solid fa-rotate"></i></button>
+      </div>
+      <div id="reportsList">
+        <div style="text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></div>
+      </div>
+    </div>
+
+    <!-- ===================== HELP MESSAGES ===================== -->
+    <div id="tab-messages" style="display:none;">
+      <div class="page-header">
+        <div class="page-title">Pesan & Bantuan</div>
+        <div class="page-sub">Pesan dari pengguna, permintaan fitur, dan laporan bantuan.</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="loadHelpMessages('unread')">Belum Dibaca</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadHelpMessages('read')">Sudah Dibaca</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadHelpMessages('')">Semua</button>
+        <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="loadHelpMessages(currentHelpFilter)"><i class="fa-solid fa-rotate"></i></button>
+      </div>
+      <div id="helpList">
+        <div style="text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></div>
+      </div>
+    </div>
+
+    <!-- ===================== GLOBAL CHAT MODERATION ===================== -->
+    <div id="tab-globalchat" style="display:none;">
+      <div class="page-header">
+        <div class="page-title">Moderasi Chat Global</div>
+        <div class="page-sub">Pantau dan hapus pesan dari chat global.</div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+          <i class="fa-solid fa-globe" style="color:var(--accent2);"></i>
+          <strong>Chat Global — Mode Admin</strong>
+          <button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="loadGlobalChatAdmin()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead><tr>
+              <th>Pengirim</th>
+              <th>Pesan</th>
+              <th>Waktu</th>
+              <th>Tindakan</th>
+            </tr></thead>
+            <tbody id="globalChatAdminBody">
+              <tr><td colspan="4" style="text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== SETTINGS ===================== -->
+    <div id="tab-settings" style="display:none;">
+      <div class="page-header">
+        <div class="page-title">Pengaturan Situs</div>
+        <div class="page-sub">Kelola logo, nama situs, dan konfigurasi global.</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <!-- LOGO UPLOAD -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;"><i class="fa-solid fa-image" style="color:var(--accent);margin-right:8px;"></i>Logo Website</div>
+          <div style="text-align:center;margin-bottom:16px;">
+            <img id="currentLogoPreview" src="" class="logo-preview" style="display:none;">
+            <div id="noLogoPlaceholder" style="width:80px;height:80px;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:2rem;color:var(--text3);"><i class="fa-solid fa-image"></i></div>
+            <div style="font-size:0.82rem;color:var(--text2);">Logo saat ini</div>
+          </div>
+          <div class="logo-upload-zone" onclick="document.getElementById('logoFileInput').click()">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size:1.8rem;color:var(--accent);margin-bottom:10px;"></i>
+            <div style="font-weight:700;font-size:0.9rem;margin-bottom:4px;">Klik untuk upload logo</div>
+            <div style="font-size:0.78rem;color:var(--text3);">PNG, JPG, SVG — Maks 2MB</div>
+            <input type="file" id="logoFileInput" accept="image/*" style="display:none;" onchange="uploadLogo(this)">
+          </div>
+          <div style="margin-top:12px;display:flex;gap:8px;">
+            <button class="btn btn-danger btn-sm" onclick="removeLogo()"><i class="fa-solid fa-trash"></i> Hapus Logo</button>
+          </div>
+          <div id="logoUploadStatus" style="margin-top:10px;font-size:0.82rem;color:var(--text3);"></div>
+        </div>
+
+        <!-- SITE NAME -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;"><i class="fa-solid fa-pen" style="color:var(--accent2);margin-right:8px;"></i>Nama & Info Situs</div>
+          <div class="form-group">
+            <label class="form-label">Nama Situs</label>
+            <input type="text" class="form-input" id="siteNameInput" placeholder="Zyvenqo" value="Zyvenqo">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Deskripsi Singkat</label>
+            <textarea class="form-input" id="siteDescInput" placeholder="Platform kode kolaboratif..." rows="3"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="saveSiteSettings()">
+            <i class="fa-solid fa-floppy-disk"></i> Simpan Pengaturan
+          </button>
+        </div>
+
+        <!-- ADMIN ACTIONS -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;"><i class="fa-solid fa-shield-halved" style="color:var(--warn);margin-right:8px;"></i>Aksi Admin</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button class="btn btn-secondary" onclick="broadcastAnnouncement()">
+              <i class="fa-solid fa-bullhorn"></i> Kirim Pengumuman Global
+            </button>
+            <button class="btn btn-secondary" onclick="clearOldGlobalChat()">
+              <i class="fa-solid fa-broom"></i> Bersihkan Chat Lama (&gt;30 hari)
+            </button>
+            <button class="btn btn-secondary" onclick="exportUsersCsv()">
+              <i class="fa-solid fa-file-export"></i> Export Data Pengguna (CSV)
+            </button>
+            <button class="btn btn-danger" onclick="confirmMassAction()">
+              <i class="fa-solid fa-triangle-exclamation"></i> Hapus Semua Akun Pending
+            </button>
+          </div>
+        </div>
+
+        <!-- STATS CARD -->
+        <div class="card">
+          <div class="card-title" style="margin-bottom:16px;"><i class="fa-solid fa-chart-pie" style="color:var(--accent);margin-right:8px;"></i>Ringkasan Sistem</div>
+          <div id="systemStats">
+            <div style="text-align:center;padding:30px;"><div class="spinner" style="margin:0 auto;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===================== ACTIVITY LOGS ===================== -->
+    <div id="tab-logs" style="display:none;">
+      <div class="page-header">
+        <div class="page-title">Log Aktivitas</div>
+        <div class="page-sub">Riwayat pendaftaran, konfirmasi, dan tindakan admin.</div>
+      </div>
+      <div class="card">
+        <div class="section-hdr">
+          <h3>Riwayat Aktivitas</h3>
+          <button class="btn btn-secondary btn-sm" onclick="loadActivityLogs()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        </div>
+        <div id="activityLogsList">
+          <div style="text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ===================== MODALS ===================== -->
+
+<!-- USER DETAIL MODAL -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal" style="max-width:540px;">
+    <div class="modal-title" id="userModalTitle">Detail Pengguna</div>
+    <div id="userModalContent"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;flex-wrap:wrap;" id="userModalActions"></div>
+  </div>
+</div>
+
+<!-- PROJECT DETAIL MODAL -->
+<div class="modal-overlay" id="projectModal">
+  <div class="modal" style="max-width:600px;">
+    <div class="modal-title" id="projectModalTitle">Detail Projek</div>
+    <div id="projectModalContent"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;flex-wrap:wrap;" id="projectModalActions"></div>
+  </div>
+</div>
+
+<!-- ANNOUNCEMENT MODAL -->
+<div class="modal-overlay" id="announcementModal">
+  <div class="modal">
+    <div class="modal-title"><i class="fa-solid fa-bullhorn" style="color:var(--warn);margin-right:8px;"></i>Kirim Pengumuman Global</div>
+    <div class="form-group">
+      <label class="form-label">Pesan Pengumuman</label>
+      <textarea class="form-input" id="announcementText" rows="4" placeholder="Tulis pesan pengumuman..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="closeModal('announcementModal')">Batal</button>
+      <button class="btn btn-primary" onclick="sendAnnouncement()"><i class="fa-solid fa-paper-plane"></i> Kirim</button>
+    </div>
+  </div>
+</div>
+
+<!-- HELP DETAIL MODAL -->
+<div class="modal-overlay" id="helpModal">
+  <div class="modal">
+    <div class="modal-title" id="helpModalTitle">Pesan Pengguna</div>
+    <div id="helpModalContent"></div>
+    <div style="margin-top:16px;" id="helpReplyArea">
+      <label class="form-label">Balas via Chat Global</label>
+      <textarea class="form-input" id="helpReplyText" rows="3" placeholder="Tulis balasan ke chat global..."></textarea>
+      <div style="display:flex;gap:8px;margin-top:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeModal('helpModal')">Tutup</button>
+        <button class="btn btn-primary" onclick="replyHelp()"><i class="fa-solid fa-paper-plane"></i> Kirim ke Chat Global</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+<script>
+// ---- ADMIN AUTH ----
+const admin = requireAdmin();
+if (!admin) throw new Error('Not admin');
+
+// ---- STATE ----
+let allUsers = [];
+let allProjects = [];
+let currentReportFilter = 'open';
+let currentHelpFilter = 'unread';
+let currentHelpId = null;
+
+// ---- LIVE CLOCK ----
+function updateClock() {
+  const el = document.getElementById('liveTime');
+  if (el) el.textContent = new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+}
+updateClock();
+setInterval(updateClock, 30000);
+
+// ---- TAB SYSTEM ----
+const tabs = ['overview','pending','users','projects','reports','messages','globalchat','settings','logs'];
+function showTab(name) {
+  tabs.forEach(t => { const el = document.getElementById('tab-' + t); if (el) el.style.display = 'none'; });
+  const target = document.getElementById('tab-' + name);
+  if (target) target.style.display = '';
+
+  // Sidebar active
+  document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+  const sideLink = document.querySelector(`.sidebar a[onclick*="'${name}'"]`);
+  if (sideLink) sideLink.classList.add('active');
+
+  // Lazy load
+  if (name === 'users') loadAllUsers();
+  if (name === 'projects') loadAllProjects();
+  if (name === 'pending') loadPendingAccounts();
+  if (name === 'reports') loadReports('open');
+  if (name === 'messages') loadHelpMessages('unread');
+  if (name === 'globalchat') loadGlobalChatAdmin();
+  if (name === 'settings') loadSettings();
+  if (name === 'logs') loadActivityLogs();
+}
+
+// ---- OVERVIEW ----
+async function loadOverview() {
+  const [
+    { count: totalUsers },
+    { count: activeUsers },
+    { count: pendingUsers },
+    { count: totalProjects },
+    { count: publicProjects },
+    { count: openReports }
+  ] = await Promise.all([
+    sb.from('users_Zyan').select('*', { count: 'exact', head: true }),
+    sb.from('users_Zyan').select('*', { count: 'exact', head: true }).eq('status', 'active'),
+    sb.from('users_Zyan').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+    sb.from('projects_Zyan').select('*', { count: 'exact', head: true }),
+    sb.from('projects_Zyan').select('*', { count: 'exact', head: true }).eq('visibility', 'public'),
+    sb.from('reports_Zyan').select('*', { count: 'exact', head: true }).eq('status', 'open')
+  ]);
+
+  document.getElementById('statTotalUsers').textContent = totalUsers || 0;
+  document.getElementById('statActiveUsers').textContent = activeUsers || 0;
+  document.getElementById('statPending').textContent = pendingUsers || 0;
+  document.getElementById('statTotalProjects').textContent = totalProjects || 0;
+  document.getElementById('statPublicProjects').textContent = publicProjects || 0;
+  document.getElementById('statReports').textContent = openReports || 0;
+  document.getElementById('statOpenReports').textContent = openReports || 0;
+
+  // Badges
+  if (pendingUsers > 0) {
+    document.getElementById('pendingBadge').textContent = pendingUsers;
+    document.getElementById('pendingBadge').style.display = '';
+  }
+  if (openReports > 0) {
+    document.getElementById('reportBadge').textContent = openReports;
+    document.getElementById('reportBadge').style.display = '';
+  }
+
+  loadRecentUsers();
+  loadRecentProjects();
+  loadQuickPending();
+  loadQuickReports();
+  loadOnlineUsers();
+}
+
+async function loadRecentUsers() {
+  const { data } = await sb.from('users_Zyan').select('*').order('created_at', { ascending: false }).limit(5);
+  const container = document.getElementById('recentUsersTable');
+  if (!data?.length) { container.innerHTML = '<div class="empty-state" style="padding:30px;"><i class="fa-solid fa-users"></i><h3>Belum ada pengguna</h3></div>'; return; }
+  container.innerHTML = `<table class="data-table"><thead><tr><th>Pengguna</th><th>Status</th><th>Bergabung</th></tr></thead><tbody>
+    ${data.map(u => `<tr class="${u.status === 'pending' ? 'pending-row' : ''}">
+      <td><div style="display:flex;align-items:center;gap:10px;">${avatarHTML(u,'sm')}<div><div style="font-weight:700;">${escHtml(u.display_name || u.username)}</div><div style="font-size:0.75rem;color:var(--text3);">@${escHtml(u.username)}</div></div></div></td>
+      <td>${statusBadge(u.status)}</td>
+      <td style="font-size:0.8rem;color:var(--text3);">${fmtDate(u.created_at)}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+async function loadRecentProjects() {
+  const { data } = await sb.from('projects_Zyan').select('*, users_Zyan(username,display_name)').order('created_at', { ascending: false }).limit(5);
+  const container = document.getElementById('recentProjectsTable');
+  if (!data?.length) { container.innerHTML = '<div class="empty-state" style="padding:30px;"><i class="fa-solid fa-folder-open"></i><h3>Belum ada projek</h3></div>'; return; }
+  container.innerHTML = `<table class="data-table"><thead><tr><th>Projek</th><th>Pemilik</th><th>Visibilitas</th></tr></thead><tbody>
+    ${data.map(p => `<tr>
+      <td style="font-weight:700;">${escHtml(p.name)}</td>
+      <td style="font-size:0.82rem;color:var(--text2);">@${escHtml(p.users_Zyan?.username || '?')}</td>
+      <td><span class="badge ${p.visibility === 'public' ? 'badge-success' : 'badge-neutral'}">${p.visibility}</span></td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+
+async function loadQuickPending() {
+  const { data } = await sb.from('users_Zyan').select('*').eq('status', 'pending').order('created_at').limit(4);
+  const container = document.getElementById('quickPendingList');
+  if (!data?.length) { container.innerHTML = '<div style="text-align:center;padding:16px;font-size:0.83rem;color:var(--text3);"><i class="fa-solid fa-circle-check" style="color:var(--success);margin-right:6px;"></i>Tidak ada akun pending</div>'; return; }
+  container.innerHTML = data.map(u => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+      ${avatarHTML(u,'sm')}
+      <div style="flex:1;min-width:0;">
+        <div style="font-weight:700;font-size:0.87rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">@${escHtml(u.username)}</div>
+        <div style="font-size:0.72rem;color:var(--text3);">${fmtDate(u.created_at)}</div>
+      </div>
+      <div style="display:flex;gap:5px;">
+        <button class="btn btn-success btn-sm btn-icon" title="Konfirmasi" onclick="confirmUser('${u.id}')"><i class="fa-solid fa-check"></i></button>
+        <button class="btn btn-danger btn-sm btn-icon" title="Tolak" onclick="rejectUser('${u.id}')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function loadQuickReports() {
+  const { data } = await sb.from('reports_Zyan').select('*, users_Zyan!reporter_id(username)').eq('status', 'open').order('created_at', { ascending: false }).limit(3);
+  const container = document.getElementById('quickReportsList');
+  if (!data?.length) { container.innerHTML = '<div style="text-align:center;padding:16px;font-size:0.83rem;color:var(--text3);"><i class="fa-solid fa-circle-check" style="color:var(--success);margin-right:6px;"></i>Tidak ada laporan baru</div>'; return; }
+  container.innerHTML = data.map(r => `
+    <div style="padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="font-size:0.82rem;font-weight:700;color:var(--danger);">${escHtml(r.target_type)} — <span style="font-family:var(--font-mono);font-size:0.72rem;">${r.target_id.substring(0,8)}…</span></div>
+      <div style="font-size:0.82rem;color:var(--text2);margin-top:2px;">${escHtml(r.reason.substring(0, 80))}${r.reason.length > 80 ? '…' : ''}</div>
+      <div style="font-size:0.72rem;color:var(--text3);margin-top:4px;">Oleh @${escHtml(r.users_Zyan?.username || '?')} — ${timeAgo(r.created_at)}</div>
+    </div>
+  `).join('') + `<div style="text-align:center;margin-top:10px;"><button class="btn btn-secondary btn-sm" onclick="showTab('reports')">Lihat Semua</button></div>`;
+}
+
+async function loadOnlineUsers() {
+  const fiveMinAgo = new Date(Date.now() - 5 * 60000).toISOString();
+  const { data } = await sb.from('users_Zyan').select('*').eq('status', 'active').gte('last_seen', fiveMinAgo).limit(10);
+  document.getElementById('onlineBadge').textContent = data?.length || 0;
+  const container = document.getElementById('onlineUsersList');
+  if (!data?.length) { container.innerHTML = '<div style="font-size:0.82rem;color:var(--text3);padding:8px 0;">Tidak ada pengguna aktif saat ini</div>'; return; }
+  container.innerHTML = data.map(u => `
+    <div class="user-item" style="padding:7px 0;" onclick="openUserModal('${u.id}')">
+      <div style="position:relative;">${avatarHTML(u,'sm')}<div class="online-dot" style="position:absolute;bottom:0;right:0;border:2px solid var(--bg2);"></div></div>
+      <div class="user-info"><div class="user-name" style="font-size:0.85rem;">${escHtml(u.display_name || u.username)}</div><div class="user-sub">@${escHtml(u.username)}</div></div>
+    </div>
+  `).join('');
+}
+
+// ---- PENDING ACCOUNTS ----
+async function loadPendingAccounts() {
+  const { data } = await sb.from('users_Zyan').select('*').eq('status', 'pending').order('created_at');
+  const container = document.getElementById('pendingTable');
+  if (!data?.length) {
+    container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-circle-check"></i><h3>Tidak ada akun menunggu</h3><p>Semua akun sudah dikonfirmasi.</p></div>';
+    document.getElementById('pendingBadge').style.display = 'none';
+    return;
+  }
+  document.getElementById('pendingBadge').textContent = data.length;
+  container.innerHTML = `<div style="overflow-x:auto;"><table class="data-table"><thead><tr>
+    <th>Pengguna</th><th>Username</th><th>Waktu Daftar</th><th>Tindakan</th>
+  </tr></thead><tbody>
+    ${data.map(u => `<tr class="pending-row">
+      <td>${avatarHTML(u,'sm')}</td>
+      <td><div style="font-weight:700;">@${escHtml(u.username)}</div></td>
+      <td style="font-size:0.82rem;color:var(--text3);">${fmtDate(u.created_at)}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-success btn-sm" onclick="confirmUser('${u.id}')"><i class="fa-solid fa-check"></i> Konfirmasi</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectUser('${u.id}')"><i class="fa-solid fa-xmark"></i> Tolak</button>
+        </div>
+      </td>
+    </tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+async function confirmUser(uid) {
+  if (!confirm('Konfirmasi akun ini?')) return;
+  const { error } = await sb.from('users_Zyan').update({ status: 'active' }).eq('id', uid);
+  if (error) { toast('Gagal konfirmasi!', 'error'); return; }
+  toast('Akun berhasil dikonfirmasi!', 'success');
+  logActivity('confirm_user', uid);
+  loadPendingAccounts();
+  loadQuickPending();
+  loadOverview();
+}
+
+async function rejectUser(uid) {
+  if (!confirm('Tolak dan hapus akun ini? Tindakan ini tidak bisa dibatalkan.')) return;
+  const { error } = await sb.from('users_Zyan').delete().eq('id', uid);
+  if (error) { toast('Gagal menghapus!', 'error'); return; }
+  toast('Akun ditolak dan dihapus.', 'info');
+  loadPendingAccounts();
+  loadQuickPending();
+  loadOverview();
+}
+
+// ---- ALL USERS ----
+async function loadAllUsers() {
+  const { data } = await sb.from('users_Zyan').select('*').order('created_at', { ascending: false });
+  allUsers = data || [];
+  renderUsersTable(allUsers);
+}
+
+function filterUsers() {
+  const q = document.getElementById('userSearchInput').value.toLowerCase();
+  const st = document.getElementById('userStatusFilter').value;
+  let filtered = allUsers.filter(u =>
+    (!q || u.username.toLowerCase().includes(q) || (u.display_name||'').toLowerCase().includes(q)) &&
+    (!st || u.status === st)
+  );
+  renderUsersTable(filtered);
+}
+
+function renderUsersTable(users) {
+  const tbody = document.getElementById('usersTableBody');
+  if (!users.length) {
+    tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state" style="padding:40px;"><i class="fa-solid fa-users"></i><h3>Tidak ada pengguna ditemukan</h3></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = users.map(u => `
+    <tr class="${u.status === 'pending' ? 'pending-row' : ''}">
+      <td>
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${avatarHTML(u,'sm')}
+          <div>
+            <div style="font-weight:700;">${escHtml(u.display_name || u.username)}</div>
+            ${u.bio ? `<div style="font-size:0.73rem;color:var(--text3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(u.bio)}</div>` : ''}
+          </div>
+        </div>
+      </td>
+      <td style="font-family:var(--font-mono);font-size:0.82rem;">@${escHtml(u.username)}</td>
+      <td>${statusBadge(u.status)}</td>
+      <td><span class="badge ${u.role === 'admin' ? 'badge-warn' : 'badge-neutral'}">${u.role}</span></td>
+      <td style="font-size:0.8rem;color:var(--text3);">${fmtDate(u.created_at)}</td>
+      <td style="font-size:0.8rem;color:var(--text3);">${u.last_seen ? timeAgo(u.last_seen) : '—'}</td>
+      <td>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm btn-icon" title="Detail" onclick="openUserModal('${u.id}')"><i class="fa-solid fa-eye"></i></button>
+          ${u.status === 'pending' ? `<button class="btn btn-success btn-sm btn-icon" title="Konfirmasi" onclick="confirmUser('${u.id}')"><i class="fa-solid fa-check"></i></button>` : ''}
+          ${u.status === 'active' ? `<button class="btn btn-secondary btn-sm btn-icon" title="Suspend" onclick="banUser('${u.id}')"><i class="fa-solid fa-ban"></i></button>` : ''}
+          ${u.status === 'banned' ? `<button class="btn btn-success btn-sm btn-icon" title="Aktifkan" onclick="unbanUser('${u.id}')"><i class="fa-solid fa-circle-check"></i></button>` : ''}
+          ${u.role !== 'admin' ? `<button class="btn btn-danger btn-sm btn-icon" title="Hapus" onclick="deleteUser('${u.id}')"><i class="fa-solid fa-trash"></i></button>` : ''}
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function openUserModal(uid) {
+  const user = allUsers.find(u => u.id === uid) || (await sb.from('users_Zyan').select('*').eq('id', uid).single()).data;
+  if (!user) return;
+  const { count: projCount } = await sb.from('projects_Zyan').select('*', { count: 'exact', head: true }).eq('owner_id', uid);
+  const { count: msgCount } = await sb.from('messages_Zyan').select('*', { count: 'exact', head: true }).eq('sender_id', uid);
+
+  document.getElementById('userModalTitle').innerHTML = `<div style="display:flex;align-items:center;gap:10px;">${avatarHTML(user,'md')}<div>${escHtml(user.display_name || user.username)}<div style="font-size:0.78rem;font-weight:400;color:var(--text3);">@${escHtml(user.username)}</div></div></div>`;
+  document.getElementById('userModalContent').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+      <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:800;font-family:var(--font-mono);">${projCount || 0}</div>
+        <div style="font-size:0.73rem;color:var(--text3);text-transform:uppercase;">Projek</div>
+      </div>
+      <div style="background:var(--bg3);border-radius:8px;padding:12px;text-align:center;">
+        <div style="font-size:1.4rem;font-weight:800;font-family:var(--font-mono);">${msgCount || 0}</div>
+        <div style="font-size:0.73rem;color:var(--text3);text-transform:uppercase;">Pesan Terkirim</div>
+      </div>
+    </div>
+    <div style="font-size:0.85rem;display:flex;flex-direction:column;gap:8px;">
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--text3);">Status</span>${statusBadge(user.status)}</div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--text3);">Role</span><span class="badge ${user.role === 'admin' ? 'badge-warn' : 'badge-neutral'}">${user.role}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--text3);">Bergabung</span><span>${fmtDate(user.created_at)}</span></div>
+      <div style="display:flex;justify-content:space-between;"><span style="color:var(--text3);">Terakhir Aktif</span><span>${user.last_seen ? timeAgo(user.last_seen) : '—'}</span></div>
+      ${user.bio ? `<div style="margin-top:8px;background:var(--bg3);border-radius:8px;padding:10px;font-size:0.83rem;color:var(--text2);font-style:italic;">"${escHtml(user.bio)}"</div>` : ''}
+    </div>
+  `;
+  document.getElementById('userModalActions').innerHTML = `
+    ${user.status === 'pending' ? `<button class="btn btn-success btn-sm" onclick="confirmUser('${uid}');closeModal('userModal')"><i class="fa-solid fa-check"></i> Konfirmasi</button>` : ''}
+    ${user.status === 'active' ? `<button class="btn btn-secondary btn-sm" onclick="banUser('${uid}');closeModal('userModal')"><i class="fa-solid fa-ban"></i> Suspend</button>` : ''}
+    ${user.status === 'banned' ? `<button class="btn btn-success btn-sm" onclick="unbanUser('${uid}');closeModal('userModal')"><i class="fa-solid fa-circle-check"></i> Aktifkan</button>` : ''}
+    ${user.role !== 'admin' ? `<button class="btn btn-danger btn-sm" onclick="deleteUser('${uid}');closeModal('userModal')"><i class="fa-solid fa-trash"></i> Hapus Akun</button>` : ''}
+    <button class="btn btn-secondary btn-sm" onclick="closeModal('userModal')">Tutup</button>
+  `;
+  openModal('userModal');
+}
+
+async function banUser(uid) {
+  if (!confirm('Suspend akun ini?')) return;
+  await sb.from('users_Zyan').update({ status: 'banned' }).eq('id', uid);
+  toast('Akun disuspend.', 'info');
+  logActivity('ban_user', uid);
+  loadAllUsers();
+}
+async function unbanUser(uid) {
+  await sb.from('users_Zyan').update({ status: 'active' }).eq('id', uid);
+  toast('Akun diaktifkan kembali.', 'success');
+  loadAllUsers();
+}
+async function deleteUser(uid) {
+  if (!confirm('HAPUS akun ini permanen? Semua data akan ikut terhapus!')) return;
+  await sb.from('users_Zyan').delete().eq('id', uid);
+  toast('Akun dihapus.', 'info');
+  loadAllUsers();
+  loadOverview();
+}
+
+// ---- PROJECTS ----
+async function loadAllProjects() {
+  const { data } = await sb.from('projects_Zyan').select('*, users_Zyan(username,display_name,avatar_url)').order('created_at', { ascending: false });
+  allProjects = data || [];
+  renderProjectsTable(allProjects);
+}
+
+function filterProjects() {
+  const q = document.getElementById('projSearchInput').value.toLowerCase();
+  const vis = document.getElementById('projVisFilter').value;
+  renderProjectsTable(allProjects.filter(p =>
+    (!q || p.name.toLowerCase().includes(q)) && (!vis || p.visibility === vis)
+  ));
+}
+
+function renderProjectsTable(projects) {
+  const tbody = document.getElementById('projectsTableBody');
+  if (!projects.length) {
+    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state" style="padding:40px;"><i class="fa-solid fa-folder-open"></i><h3>Tidak ada projek</h3></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = projects.map(p => `
+    <tr>
+      <td><div style="font-weight:700;">${escHtml(p.name)}</div>${p.description ? `<div style="font-size:0.75rem;color:var(--text3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(p.description)}</div>` : ''}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${avatarHTML(p.users_Zyan,'sm')}
+          <span style="font-size:0.82rem;">@${escHtml(p.users_Zyan?.username || '?')}</span>
+        </div>
+      </td>
+      <td><span class="badge ${p.visibility === 'public' ? 'badge-success' : 'badge-neutral'}"><i class="fa-solid fa-${p.visibility === 'public' ? 'globe' : 'lock'}"></i> ${p.visibility}</span></td>
+      <td style="font-size:0.8rem;color:var(--text3);">${fmtDate(p.created_at)}</td>
+      <td style="font-size:0.8rem;color:var(--text3);">${timeAgo(p.updated_at)}</td>
+      <td>
+        <div style="display:flex;gap:5px;">
+          <button class="btn btn-secondary btn-sm btn-icon" title="Lihat" onclick="window.open('project.html?id=${p.id}','_blank')"><i class="fa-solid fa-eye"></i></button>
+          <button class="btn btn-danger btn-sm btn-icon" title="Hapus" onclick="deleteProject('${p.id}')"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function deleteProject(pid) {
+  if (!confirm('Hapus projek ini permanen?')) return;
+  const { error } = await sb.from('projects_Zyan').delete().eq('id', pid);
+  if (error) { toast('Gagal menghapus projek!', 'error'); return; }
+  toast('Projek dihapus.', 'info');
+  loadAllProjects();
+  loadOverview();
+}
+
+// ---- REPORTS ----
+async function loadReports(status) {
+  currentReportFilter = status;
+  let query = sb.from('reports_Zyan').select('*, users_Zyan!reporter_id(username,display_name,avatar_url)').order('created_at', { ascending: false });
+  if (status) query = query.eq('status', status);
+  const { data } = await query.limit(50);
+  const container = document.getElementById('reportsList');
+  if (!data?.length) {
+    container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-flag"></i><h3>Tidak ada laporan</h3><p>Semua bersih!</p></div>';
+    return;
+  }
+  container.innerHTML = data.map(r => `
+    <div class="report-item">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            ${avatarHTML(r.users_Zyan,'sm')}
+            <span style="font-weight:700;font-size:0.87rem;">@${escHtml(r.users_Zyan?.username || '?')}</span>
+            <span class="badge badge-danger" style="font-size:0.68rem;">${escHtml(r.target_type)}</span>
+            <span class="badge ${r.status === 'open' ? 'badge-warn' : 'badge-success'}" style="font-size:0.68rem;">${r.status}</span>
+          </div>
+          <div class="report-target"><i class="fa-solid fa-crosshairs" style="margin-right:4px;"></i>Target ID: ${r.target_id.substring(0,16)}…</div>
+          <div class="report-reason">${escHtml(r.reason)}</div>
+          <div style="font-size:0.73rem;color:var(--text3);">${fmtDate(r.created_at)} — ${timeAgo(r.created_at)}</div>
+        </div>
+      </div>
+      <div class="report-actions">
+        ${r.status === 'open' ? `
+          <button class="btn btn-danger btn-sm" onclick="handleReport('${r.id}','${r.target_type}','${r.target_id}')">
+            <i class="fa-solid fa-trash"></i> Hapus Konten
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="dismissReport('${r.id}')">
+            <i class="fa-solid fa-check"></i> Abaikan
+          </button>
+        ` : `<span style="font-size:0.8rem;color:var(--success);"><i class="fa-solid fa-circle-check"></i> Sudah ditangani</span>`}
+        <button class="btn btn-danger btn-sm" onclick="deleteReport('${r.id}')"><i class="fa-solid fa-xmark"></i> Hapus Laporan</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function handleReport(reportId, targetType, targetId) {
+  if (!confirm(`Hapus konten ${targetType} ini dan tandai laporan selesai?`)) return;
+  let delErr = null;
+  if (targetType === 'user') {
+    const { error } = await sb.from('users_Zyan').delete().eq('id', targetId);
+    delErr = error;
+  } else if (targetType === 'project') {
+    const { error } = await sb.from('projects_Zyan').delete().eq('id', targetId);
+    delErr = error;
+  } else if (targetType === 'message') {
+    const { error } = await sb.from('messages_Zyan').delete().eq('id', targetId);
+    delErr = error;
+  } else if (targetType === 'global_chat') {
+    const { error } = await sb.from('global_chat_Zyan').delete().eq('id', targetId);
+    delErr = error;
+  }
+  if (delErr) { toast('Gagal menghapus konten! (Mungkin sudah dihapus)', 'error'); }
+  await sb.from('reports_Zyan').update({ status: 'resolved' }).eq('id', reportId);
+  toast('Konten dihapus & laporan ditandai selesai.', 'success');
+  loadReports(currentReportFilter);
+  loadOverview();
+}
+
+async function dismissReport(rid) {
+  await sb.from('reports_Zyan').update({ status: 'resolved' }).eq('id', rid);
+  toast('Laporan diabaikan.', 'info');
+  loadReports(currentReportFilter);
+}
+async function deleteReport(rid) {
+  if (!confirm('Hapus laporan ini?')) return;
+  await sb.from('reports_Zyan').delete().eq('id', rid);
+  toast('Laporan dihapus.', 'info');
+  loadReports(currentReportFilter);
+}
+
+// ---- HELP MESSAGES ----
+async function loadHelpMessages(status) {
+  currentHelpFilter = status;
+  let query = sb.from('help_messages_Zyan').select('*, users_Zyan(username,display_name,avatar_url)').order('created_at', { ascending: false });
+  if (status) query = query.eq('status', status);
+  const { data } = await query.limit(50);
+  const container = document.getElementById('helpList');
+  if (!data?.length) {
+    container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-envelope-open"></i><h3>Tidak ada pesan</h3></div>';
+    return;
+  }
+  container.innerHTML = data.map(m => `
+    <div class="help-item ${m.status === 'unread' ? 'unread' : ''}">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+            ${avatarHTML(m.users_Zyan,'sm')}
+            <span style="font-weight:700;font-size:0.87rem;">@${escHtml(m.users_Zyan?.username || '?')}</span>
+            <span class="badge badge-accent" style="font-size:0.68rem;">${m.type}</span>
+            ${m.status === 'unread' ? '<span class="badge badge-warn" style="font-size:0.65rem;">Baru</span>' : ''}
+          </div>
+          ${m.subject ? `<div class="help-subject">${escHtml(m.subject)}</div>` : ''}
+          <div class="help-content">${escHtml(m.content.substring(0,180))}${m.content.length > 180 ? '…' : ''}</div>
+          <div class="help-meta"><span><i class="fa-regular fa-clock"></i> ${fmtDate(m.created_at)}</span></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="btn btn-secondary btn-sm" onclick="openHelpModal('${m.id}')"><i class="fa-solid fa-eye"></i> Lihat</button>
+          <button class="btn btn-danger btn-sm btn-icon" onclick="deleteHelpMsg('${m.id}')"><i class="fa-solid fa-trash"></i></button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function openHelpModal(mid) {
+  const { data: m } = await sb.from('help_messages_Zyan').select('*, users_Zyan(username,display_name,avatar_url)').eq('id', mid).single();
+  if (!m) return;
+  currentHelpId = mid;
+  // Mark read
+  await sb.from('help_messages_Zyan').update({ status: 'read' }).eq('id', mid);
+  document.getElementById('helpModalTitle').innerHTML = m.subject ? escHtml(m.subject) : 'Pesan Pengguna';
+  document.getElementById('helpModalContent').innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+      ${avatarHTML(m.users_Zyan,'md')}
+      <div>
+        <div style="font-weight:700;">${escHtml(m.users_Zyan?.display_name || m.users_Zyan?.username || '?')}</div>
+        <div style="font-size:0.78rem;color:var(--text3);">@${escHtml(m.users_Zyan?.username || '?')} — ${fmtDate(m.created_at)}</div>
+      </div>
+      <span class="badge badge-accent" style="margin-left:auto;">${m.type}</span>
+    </div>
+    <div style="background:var(--bg3);border-radius:10px;padding:16px;font-size:0.9rem;line-height:1.7;white-space:pre-wrap;">${escHtml(m.content)}</div>
+  `;
+  openModal('helpModal');
+  loadHelpMessages(currentHelpFilter);
+}
+
+async function replyHelp() {
+  const text = document.getElementById('helpReplyText').value.trim();
+  if (!text) return;
+  await sb.from('global_chat_Zyan').insert({ user_id: admin.id, content: `[Admin] ${text}` });
+  toast('Balasan dikirim ke chat global!', 'success');
+  document.getElementById('helpReplyText').value = '';
+  closeModal('helpModal');
+}
+
+async function deleteHelpMsg(mid) {
+  if (!confirm('Hapus pesan ini?')) return;
+  await sb.from('help_messages_Zyan').delete().eq('id', mid);
+  toast('Pesan dihapus.', 'info');
+  loadHelpMessages(currentHelpFilter);
+}
+
+// ---- GLOBAL CHAT MODERATION ----
+async function loadGlobalChatAdmin() {
+  const { data } = await sb.from('global_chat_Zyan')
+    .select('*, users_Zyan(username, display_name, avatar_url)')
+    .order('created_at', { ascending: false }).limit(100);
+  const tbody = document.getElementById('globalChatAdminBody');
+  if (!data?.length) {
+    tbody.innerHTML = '<tr><td colspan="4"><div class="empty-state" style="padding:30px;"><i class="fa-solid fa-comments"></i><h3>Belum ada pesan</h3></div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(m => `
+    <tr>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${avatarHTML(m.users_Zyan,'sm')}
+          <span style="font-weight:700;font-size:0.82rem;">@${escHtml(m.users_Zyan?.username || '?')}</span>
+        </div>
+      </td>
+      <td style="max-width:360px;">
+        ${m.media_url ? `<img src="${escHtml(m.media_url)}" style="max-height:48px;border-radius:6px;display:block;margin-bottom:4px;">` : ''}
+        ${m.content ? `<span style="font-size:0.85rem;">${escHtml(m.content.substring(0,120))}${m.content.length > 120 ? '…' : ''}</span>` : ''}
+      </td>
+      <td style="font-size:0.78rem;color:var(--text3);white-space:nowrap;">${fmtDate(m.created_at)}<br>${fmtTime(m.created_at)}</td>
+      <td>
+        <button class="btn btn-danger btn-sm btn-icon" title="Hapus pesan" onclick="deleteGlobalMsg('${m.id}')"><i class="fa-solid fa-trash"></i></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+async function deleteGlobalMsg(mid) {
+  if (!confirm('Hapus pesan dari chat global?')) return;
+  await sb.from('global_chat_Zyan').delete().eq('id', mid);
+  toast('Pesan dihapus.', 'info');
+  loadGlobalChatAdmin();
+}
+
+// ---- SETTINGS ----
+async function loadSettings() {
+  const { data } = await sb.from('site_settings_Zyan').select('*');
+  const settings = {};
+  (data||[]).forEach(s => settings[s.key] = s.value);
+
+  const logoUrl = settings['logo_url'];
+  if (logoUrl) {
+    document.getElementById('currentLogoPreview').src = logoUrl;
+    document.getElementById('currentLogoPreview').style.display = '';
+    document.getElementById('noLogoPlaceholder').style.display = 'none';
+  }
+  if (settings['site_name']) document.getElementById('siteNameInput').value = settings['site_name'];
+  if (settings['site_desc']) document.getElementById('siteDescInput').value = settings['site_desc'];
+
+  // System stats
+  const [{ count: totalUsers }, { count: totalProj }, { count: totalFiles }, { count: totalMsgs }, { count: totalGC }] = await Promise.all([
+    sb.from('users_Zyan').select('*', { count: 'exact', head: true }),
+    sb.from('projects_Zyan').select('*', { count: 'exact', head: true }),
+    sb.from('files_Zyan').select('*', { count: 'exact', head: true }),
+    sb.from('messages_Zyan').select('*', { count: 'exact', head: true }),
+    sb.from('global_chat_Zyan').select('*', { count: 'exact', head: true }),
+  ]);
+  document.getElementById('systemStats').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:0.87rem;">
+      ${[
+        ['fa-users','Pengguna terdaftar',totalUsers||0,'var(--accent)'],
+        ['fa-folder','Total projek',totalProj||0,'var(--accent2)'],
+        ['fa-file','Total file',totalFiles||0,'var(--warn)'],
+        ['fa-envelope','Total DM',totalMsgs||0,'var(--success)'],
+        ['fa-comments','Pesan global',totalGC||0,'var(--danger)'],
+      ].map(([icon,label,val,color]) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--bg3);border-radius:8px;">
+          <div style="display:flex;align-items:center;gap:8px;"><i class="fa-solid ${icon}" style="color:${color};width:16px;text-align:center;"></i><span style="color:var(--text2);">${label}</span></div>
+          <strong style="font-family:var(--font-mono);">${val}</strong>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+async function uploadLogo(input) {
+  if (!input.files[0]) return;
+  const file = input.files[0];
+  const statusEl = document.getElementById('logoUploadStatus');
+  if (file.size > 2 * 1024 * 1024) { statusEl.textContent = 'File terlalu besar (maks 2MB)'; statusEl.style.color = 'var(--danger)'; return; }
+  statusEl.textContent = 'Mengupload...'; statusEl.style.color = 'var(--text3)';
+  const path = `logos/site-logo-${Date.now()}.${file.name.split('.').pop()}`;
+  const { error } = await sb.storage.from('zyvenqo').upload(path, file, { upsert: true });
+  if (error) { statusEl.textContent = 'Gagal upload: ' + error.message; statusEl.style.color = 'var(--danger)'; return; }
+  const { data: urlData } = sb.storage.from('zyvenqo').getPublicUrl(path);
+  await upsertSetting('logo_url', urlData.publicUrl);
+  document.getElementById('currentLogoPreview').src = urlData.publicUrl;
+  document.getElementById('currentLogoPreview').style.display = '';
+  document.getElementById('noLogoPlaceholder').style.display = 'none';
+  statusEl.textContent = 'Logo berhasil diupload!'; statusEl.style.color = 'var(--success)';
+  toast('Logo website diperbarui!', 'success');
+  loadSiteLogo();
+}
+
+async function removeLogo() {
+  if (!confirm('Hapus logo saat ini?')) return;
+  await upsertSetting('logo_url', '');
+  document.getElementById('currentLogoPreview').style.display = 'none';
+  document.getElementById('noLogoPlaceholder').style.display = '';
+  toast('Logo dihapus.', 'info');
+  loadSiteLogo();
+}
+
+async function saveSiteSettings() {
+  const name = document.getElementById('siteNameInput').value.trim();
+  const desc = document.getElementById('siteDescInput').value.trim();
+  if (!name) { toast('Nama situs tidak boleh kosong!', 'error'); return; }
+  await upsertSetting('site_name', name);
+  await upsertSetting('site_desc', desc);
+  toast('Pengaturan situs disimpan!', 'success');
+}
+
+async function upsertSetting(key, value) {
+  const { data } = await sb.from('site_settings_Zyan').select('id').eq('key', key).single();
+  if (data) {
+    await sb.from('site_settings_Zyan').update({ value, updated_at: new Date().toISOString() }).eq('key', key);
+  } else {
+    await sb.from('site_settings_Zyan').insert({ key, value });
+  }
+}
+
+async function clearOldGlobalChat() {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  if (!confirm('Hapus semua pesan global lebih dari 30 hari?')) return;
+  const { error } = await sb.from('global_chat_Zyan').delete().lt('created_at', thirtyDaysAgo);
+  if (error) { toast('Gagal membersihkan chat!', 'error'); return; }
+  toast('Chat lama berhasil dibersihkan!', 'success');
+}
+
+async function confirmMassAction() {
+  if (!confirm('Hapus SEMUA akun pending? Tindakan ini tidak bisa dibatalkan!')) return;
+  if (!confirm('Konfirmasi sekali lagi — hapus semua akun pending?')) return;
+  const { data } = await sb.from('users_Zyan').select('id').eq('status', 'pending');
+  if (!data?.length) { toast('Tidak ada akun pending.', 'info'); return; }
+  await sb.from('users_Zyan').delete().eq('status', 'pending');
+  toast(`${data.length} akun pending dihapus.`, 'info');
+  loadOverview();
+}
+
+function exportUsersCsv() {
+  if (!allUsers.length) { toast('Muat data pengguna dulu!', 'error'); return; }
+  const headers = ['id','username','display_name','status','role','created_at'];
+  const rows = allUsers.map(u => headers.map(h => `"${(u[h]||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = `zyvenqo-users-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('Data pengguna diekspor!', 'success');
+}
+
+function broadcastAnnouncement() { openModal('announcementModal'); }
+
+async function sendAnnouncement() {
+  const text = document.getElementById('announcementText').value.trim();
+  if (!text) return;
+  await sb.from('global_chat_Zyan').insert({ user_id: admin.id, content: `[PENGUMUMAN] ${text}` });
+  toast('Pengumuman dikirim ke chat global!', 'success');
+  document.getElementById('announcementText').value = '';
+  closeModal('announcementModal');
+}
+
+// ---- ACTIVITY LOGS ----
+async function loadActivityLogs() {
+  // Combine recent users + confirmations as log
+  const { data: users } = await sb.from('users_Zyan').select('*').order('created_at', { ascending: false }).limit(30);
+  const { data: projects } = await sb.from('projects_Zyan').select('*, users_Zyan(username)').order('created_at', { ascending: false }).limit(20);
+  const container = document.getElementById('activityLogsList');
+
+  const logs = [
+    ...(users||[]).map(u => ({ type: u.status === 'active' ? 'confirm' : 'register', text: u.status === 'active' ? `Akun @${u.username} diaktifkan` : `Pendaftaran baru: @${u.username}`, time: u.created_at })),
+    ...(projects||[]).map(p => ({ type: 'project', text: `Projek "${p.name}" dibuat oleh @${p.users_Zyan?.username || '?'}`, time: p.created_at })),
+  ].sort((a,b) => new Date(b.time) - new Date(a.time)).slice(0, 40);
+
+  if (!logs.length) { container.innerHTML = '<div class="empty-state"><i class="fa-solid fa-list-check"></i><h3>Belum ada aktivitas</h3></div>'; return; }
+
+  const icons = { confirm: ['fa-user-check','rgba(46,213,115,0.15)','var(--success)'], register: ['fa-user-plus','rgba(108,99,255,0.15)','var(--accent)'], project: ['fa-folder-plus','rgba(0,212,170,0.15)','var(--accent2)'] };
+  container.innerHTML = logs.map(l => {
+    const [icon, bg, color] = icons[l.type] || ['fa-circle','var(--bg3)','var(--text3)'];
+    return `<div class="log-item">
+      <div class="log-icon" style="background:${bg};color:${color};"><i class="fa-solid ${icon}"></i></div>
+      <div><div class="log-text">${escHtml(l.text)}</div><div class="log-time"><i class="fa-regular fa-clock"></i> ${fmtDate(l.time)} ${fmtTime(l.time)}</div></div>
+    </div>`;
+  }).join('');
+}
+
+// ---- HELPERS ----
+function statusBadge(status) {
+  const map = { active: 'badge-success', pending: 'badge-warn', banned: 'badge-danger' };
+  return `<span class="badge ${map[status] || 'badge-neutral'}">${status}</span>`;
+}
+
+function openModal(id) {
+  document.getElementById(id)?.classList.add('active');
+  document.addEventListener('keydown', closeOnEsc);
+}
+function closeModal(id) {
+  document.getElementById(id)?.classList.remove('active');
+}
+function closeOnEsc(e) { if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active')); }
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('active'); }));
+
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function toggleAdminTheme() {
+  const curr = document.documentElement.getAttribute('data-theme');
+  applyTheme(curr === 'dark' ? 'light' : 'dark');
+}
+
+function doAdminLogout() {
+  if (confirm('Keluar dari panel admin?')) { clearSession(); window.location.href = 'index.html'; }
+}
+
+function logActivity(type, targetId) {
+  // Future: insert to activity_logs_Zyan table
+  console.log('[Admin Log]', type, targetId);
+}
+
+// Update last seen
+sb.from('users_Zyan').update({ last_seen: new Date().toISOString() }).eq('id', admin.id);
+
+// ---- INIT ----
+document.getElementById('adminName').textContent = admin.display_name || admin.username;
+document.getElementById('adminAvatar').outerHTML = avatarHTML(admin, 'sm');
+loadOverview();
+
+// Auto refresh online every 30s
+setInterval(loadOnlineUsers, 30000);
+setInterval(() => sb.from('users_Zyan').update({ last_seen: new Date().toISOString() }).eq('id', admin.id), 60000);
+</script>
+</body>
+</html>

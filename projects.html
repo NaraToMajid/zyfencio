@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projek — Zyvenqo</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <button class="hamburger"><i class="fa-solid fa-bars"></i></button>
+    <a href="index.html" class="logo"><img src="" class="site-logo-img" style="display:none"><span>Zyv</span><span style="color:var(--text)">enqo</span></a>
+    <div style="flex:1;max-width:360px;margin:0 16px;">
+      <div class="search-bar"><i class="fa-solid fa-magnifying-glass"></i><input type="text" placeholder="Cari projek..." id="searchInp" onkeydown="if(event.key==='Enter')filterProjects()"></div>
+    </div>
+    <nav>
+      <a href="messages.html"><i class="fa-solid fa-envelope"></i></a>
+      <div class="dropdown">
+        <button data-dropdown="pm2" style="background:none;border:none;cursor:pointer;padding:4px 8px;" id="topAv"><div class="avatar avatar-sm">Z</div></button>
+        <div class="dropdown-menu" id="pm2">
+          <div class="dropdown-item" onclick="location.href='settings.html'"><i class="fa-solid fa-gear"></i> Pengaturan</div>
+          <div class="dropdown-item" onclick="toggleThemeUser()"><i class="fa-solid fa-circle-half-stroke"></i> Ganti Tema</div>
+          <div class="dropdown-item danger" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Keluar</div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-section">Menu</div>
+      <a href="dashboard.html"><i class="fa-solid fa-house"></i> Dashboard</a>
+      <a href="projects.html" class="active"><i class="fa-solid fa-folder"></i> Projek Saya</a>
+      <a href="explore.html"><i class="fa-solid fa-compass"></i> Jelajahi</a>
+      <a href="zyvedit.html"><i class="fa-solid fa-code"></i> Zyvedit</a>
+      <div class="sidebar-section">Sosial</div>
+      <a href="messages.html"><i class="fa-solid fa-envelope"></i> Pesan</a>
+      <a href="globalchat.html"><i class="fa-solid fa-comments"></i> Chat Global</a>
+      <div class="sidebar-section">Lainnya</div>
+      <a href="help.html"><i class="fa-solid fa-circle-question"></i> Bantuan</a>
+      <a href="settings.html"><i class="fa-solid fa-gear"></i> Pengaturan</a>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div class="page-title">Projek Saya</div>
+          <div class="page-sub">Kelola semua projek kode yang kamu miliki</div>
+        </div>
+        <button class="btn btn-primary" onclick="openNewProject()">
+          <i class="fa-solid fa-plus"></i> Projek Baru
+        </button>
+      </div>
+
+      <!-- FILTER BAR -->
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center;">
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-secondary btn-sm active-filter" id="filterAll" onclick="setFilter('all', this)">Semua</button>
+          <button class="btn btn-secondary btn-sm" id="filterPub" onclick="setFilter('public', this)">Publik</button>
+          <button class="btn btn-secondary btn-sm" id="filterPri" onclick="setFilter('private', this)">Privat</button>
+        </div>
+        <div style="margin-left:auto;font-size:0.82rem;color:var(--text3);" id="projectCount"></div>
+      </div>
+
+      <div class="projects-grid" id="projectsGrid">
+        <div style="grid-column:1/-1;text-align:center;padding:60px 20px;">
+          <div class="spinner" style="margin:0 auto;"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- NEW PROJECT MODAL -->
+  <div class="modal-overlay" id="newProjectModal">
+    <div class="modal" style="max-width:520px;">
+      <div class="modal-title"><i class="fa-solid fa-folder-plus" style="color:var(--accent)"></i> Buat Projek Baru</div>
+      
+      <div class="tabs" data-group="newproj" style="margin-bottom:20px;">
+        <button class="tab-btn active" data-tab="manual-tab">Ketik Manual</button>
+        <button class="tab-btn" data-tab="upload-tab">Upload File</button>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">Nama Projek</label>
+        <input type="text" class="form-input" id="projName" placeholder="Nama projek...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Deskripsi</label>
+        <textarea class="form-input" id="projDesc" placeholder="Deskripsi singkat..." rows="2"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Visibilitas</label>
+        <select class="form-input" id="projVisibility">
+          <option value="public">Publik — dapat dilihat semua orang</option>
+          <option value="private">Privat — hanya kamu yang bisa lihat</option>
+        </select>
+      </div>
+
+      <div class="tab-panel active" data-tab="manual-tab" data-group="newproj">
+        <div class="form-group">
+          <label class="form-label">File Pertama (Opsional)</label>
+          <input type="text" class="form-input" id="firstFileName" placeholder="Nama file, misal: index.html">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Isi File</label>
+          <textarea class="form-input" id="firstFileContent" placeholder="Konten file..." rows="5" style="font-family:var(--font-mono);font-size:0.83rem;"></textarea>
+        </div>
+      </div>
+
+      <div class="tab-panel" data-tab="upload-tab" data-group="newproj">
+        <div class="form-group">
+          <label class="form-label">Upload File</label>
+          <div id="dropZone" style="border:2px dashed var(--border);border-radius:10px;padding:32px;text-align:center;cursor:pointer;transition:border-color 0.2s;" ondragover="event.preventDefault();this.style.borderColor='var(--accent)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="handleDrop(event)">
+            <i class="fa-solid fa-cloud-arrow-up" style="font-size:2rem;color:var(--text3);margin-bottom:10px;display:block;"></i>
+            <p style="font-size:0.85rem;color:var(--text2);">Drag & drop file ke sini, atau klik untuk pilih</p>
+            <input type="file" id="fileUpload" multiple style="display:none" onchange="handleFileSelect(this.files)">
+          </div>
+          <div id="uploadedList" style="margin-top:12px;"></div>
+        </div>
+        <div id="assetUpload" style="margin-top:4px;">
+          <label class="form-label">Upload Aset Media (Gambar, dll)</label>
+          <input type="file" id="assetInput" multiple accept="image/*,video/*,audio/*" class="form-input" style="padding:8px;" onchange="handleAssets(this.files)">
+          <div id="assetList" style="margin-top:8px;"></div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button class="btn btn-primary" style="flex:1;justify-content:center;" onclick="createProject()">
+          <i class="fa-solid fa-folder-plus"></i> Buat Projek
+        </button>
+        <button class="btn btn-secondary" onclick="closeModal('newProjectModal')">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="app.js"></script>
+  <script>
+    const user = requireAuth();
+    if (!user) throw new Error();
+
+    let allProjects = [];
+    let activeFilter = 'all';
+    let uploadedFiles = [];
+    let assetFiles = [];
+
+    document.getElementById('topAv').querySelector('.avatar').outerHTML = avatarHTML(user, 'sm');
+
+    async function loadProjects() {
+      const { data } = await sb.from('projects_Zyan')
+        .select('*, files_Zyan(count)').eq('owner_id', user.id)
+        .order('updated_at', { ascending: false });
+      allProjects = data || [];
+      renderProjects();
+    }
+
+    function setFilter(f, btn) {
+      activeFilter = f;
+      document.querySelectorAll('.active-filter').forEach(b => b.classList.remove('active-filter'));
+      btn.classList.add('active-filter');
+      renderProjects();
+    }
+
+    function filterProjects() {
+      const q = document.getElementById('searchInp').value.toLowerCase();
+      const filtered = allProjects.filter(p =>
+        (activeFilter === 'all' || p.visibility === activeFilter) &&
+        (p.name.toLowerCase().includes(q) || (p.description||'').toLowerCase().includes(q))
+      );
+      renderCards(filtered);
+    }
+
+    function renderProjects() {
+      const filtered = allProjects.filter(p => activeFilter === 'all' || p.visibility === activeFilter);
+      renderCards(filtered);
+    }
+
+    function renderCards(projects) {
+      document.getElementById('projectCount').textContent = `${projects.length} projek`;
+      if (!projects.length) {
+        document.getElementById('projectsGrid').innerHTML = `<div style="grid-column:1/-1"><div class="empty-state"><i class="fa-solid fa-folder-open"></i><h3>Belum ada projek</h3><p>Klik tombol "Projek Baru" untuk memulai.</p></div></div>`;
+        return;
+      }
+      document.getElementById('projectsGrid').innerHTML = projects.map(p => `
+        <a class="project-card" href="project.html?id=${p.id}">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+            <div>
+              <div class="project-name">${escHtml(p.name)}</div>
+              <div class="project-desc">${escHtml(p.description || 'Tidak ada deskripsi')}</div>
+            </div>
+            <span class="badge ${p.visibility === 'public' ? 'badge-success' : 'badge-neutral'}">
+              <i class="fa-solid fa-${p.visibility === 'public' ? 'globe' : 'lock'}"></i>
+              ${p.visibility === 'public' ? 'Publik' : 'Privat'}
+            </span>
+          </div>
+          <div class="project-meta">
+            <span><i class="fa-regular fa-clock"></i> ${timeAgo(p.updated_at)}</span>
+            <span style="margin-left:auto;display:flex;gap:6px;">
+              <button class="btn btn-secondary btn-sm" onclick="event.preventDefault();editProject('${p.id}','${escHtml(p.name)}','${escHtml(p.description||'')}','${p.visibility}')">
+                <i class="fa-solid fa-pen"></i>
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="event.preventDefault();deleteProject('${p.id}')">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </span>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    function openNewProject() {
+      document.getElementById('projName').value = '';
+      document.getElementById('projDesc').value = '';
+      document.getElementById('firstFileName').value = '';
+      document.getElementById('firstFileContent').value = '';
+      uploadedFiles = []; assetFiles = [];
+      document.getElementById('uploadedList').innerHTML = '';
+      document.getElementById('assetList').innerHTML = '';
+      openModal('newProjectModal');
+      initTabs(document.getElementById('newProjectModal'));
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      e.currentTarget.style.borderColor = 'var(--border)';
+      handleFileSelect(e.dataTransfer.files);
+    }
+
+    function handleFileSelect(files) {
+      uploadedFiles = [...files];
+      document.getElementById('uploadedList').innerHTML = uploadedFiles.map((f, i) =>
+        `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);">
+          <i class="fa-solid fa-file-code" style="color:var(--accent);"></i>
+          <span style="flex:1;font-size:0.83rem;font-family:var(--font-mono);">${escHtml(f.name)}</span>
+          <span style="font-size:0.75rem;color:var(--text3);">${fmtSize(f.size)}</span>
+        </div>`
+      ).join('');
+    }
+
+    function handleAssets(files) {
+      assetFiles = [...files];
+      document.getElementById('assetList').innerHTML = assetFiles.map(f =>
+        `<span class="badge badge-neutral" style="margin:3px;"><i class="fa-solid fa-image"></i>${escHtml(f.name)}</span>`
+      ).join('');
+    }
+
+    async function createProject() {
+      const name = document.getElementById('projName').value.trim();
+      const desc = document.getElementById('projDesc').value.trim();
+      const visibility = document.getElementById('projVisibility').value;
+      if (!name) return toast('Nama projek wajib diisi!', 'error');
+
+      const { data: proj, error } = await sb.from('projects_Zyan').insert({
+        owner_id: user.id, name, description: desc, visibility
+      }).select().single();
+      if (error) return toast('Gagal membuat projek: ' + error.message, 'error');
+
+      // Handle manual file
+      const fname = document.getElementById('firstFileName').value.trim();
+      const fcontent = document.getElementById('firstFileContent').value;
+      if (fname) {
+        await sb.from('files_Zyan').insert({
+          project_id: proj.id, name: fname, content: fcontent,
+          file_type: fname.split('.').pop(), size_bytes: fcontent.length
+        });
+      }
+
+      // Handle uploaded files
+      for (const file of uploadedFiles) {
+        const text = await file.text().catch(() => '');
+        await sb.from('files_Zyan').insert({
+          project_id: proj.id, name: file.name, content: text,
+          file_type: file.name.split('.').pop(), size_bytes: file.size
+        });
+      }
+
+      // Handle asset uploads to storage
+      for (const asset of assetFiles) {
+        const path = `projects/${proj.id}/assets/${asset.name}`;
+        await sb.storage.from('zyvenqo').upload(path, asset, { upsert: true });
+      }
+
+      closeModal('newProjectModal');
+      toast('Projek berhasil dibuat!', 'success');
+      loadProjects();
+    }
+
+    async function deleteProject(id) {
+      if (!confirm('Hapus projek ini? Semua file akan ikut terhapus.')) return;
+      const { error } = await sb.from('projects_Zyan').delete().eq('id', id).eq('owner_id', user.id);
+      if (error) return toast('Gagal menghapus!', 'error');
+      toast('Projek dihapus', 'info');
+      loadProjects();
+    }
+
+    function editProject(id, name, desc, vis) {
+      const newName = prompt('Nama projek:', name);
+      if (newName === null) return;
+      const newDesc = prompt('Deskripsi:', desc);
+      const newVis = confirm('Jadikan Publik? (Batal = Privat)') ? 'public' : 'private';
+      sb.from('projects_Zyan').update({ name: newName, description: newDesc, visibility: newVis, updated_at: new Date().toISOString() })
+        .eq('id', id).eq('owner_id', user.id).then(() => { toast('Projek diperbarui!', 'success'); loadProjects(); });
+    }
+
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function toggleThemeUser() { const c=document.documentElement.getAttribute('data-theme'); applyTheme(c==='dark'?'light':'dark'); }
+    function doLogout() { if(confirm('Keluar?')){clearSession();window.location.href='index.html';} }
+
+    // Open new project modal if ?new=1
+    if (new URLSearchParams(location.search).get('new') === '1') setTimeout(openNewProject, 400);
+
+    loadProjects();
+  </script>
+</body>
+</html>
